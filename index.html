@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- VERSION: 2.1 - Fix riepilogo prodotti completo -->
+<!-- VERSION: 2.2 - Fix input duplicati ricerca/categorie -->
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -891,7 +891,7 @@
             // GESTIONE ORDINE
             // ============================================
             window.generateSummary = async function() {
-                console.log('🔥🔥🔥 GENERATE SUMMARY - VERSION 2.1 - FIX COMPLETO 🔥🔥🔥');
+                console.log('🔥🔥🔥 GENERATE SUMMARY - VERSION 2.2 - FIX INPUT DUPLICATI 🔥🔥🔥');
                 
                 const customerName = document.getElementById('customerName').value.trim();
                 const customerPhone = document.getElementById('customerPhone').value.trim();
@@ -905,29 +905,43 @@
                 const allInputs = document.querySelectorAll('input[type="number"][data-product-id]');
                 let orderItems = [];
                 let missingUnits = [];
+                let productValues = {}; // Track values by product ID
                 
                 console.log(`📊 Totale input trovati: ${allInputs.length}`);
                 
+                // First pass: collect all values for each product
                 allInputs.forEach(input => {
                     const quantity = parseFloat(input.value);
+                    const productId = input.getAttribute('data-product-id');
                     const productName = input.getAttribute('data-product-name');
                     
-                    console.log(`🔍 Input: ${productName}, Value: "${input.value}", Parsed: ${quantity}`);
+                    // Se questo prodotto ha già un valore, prendi il più grande (non-zero)
+                    if (!productValues[productId] || (quantity > 0 && quantity > (productValues[productId].quantity || 0))) {
+                        productValues[productId] = {
+                            quantity: quantity || 0,
+                            productName: productName,
+                            categoryName: input.getAttribute('data-category-name'),
+                            productId: productId
+                        };
+                    }
+                });
+                
+                // Second pass: process collected values
+                Object.values(productValues).forEach(item => {
+                    console.log(`🔍 Prodotto: ${item.productName}, Quantità: ${item.quantity}`);
                     
-                    if (quantity > 0) {
-                        const productId = input.getAttribute('data-product-id');
-                        const categoryName = input.getAttribute('data-category-name');
-                        const unit = getSelectedUnit(productId);
+                    if (item.quantity > 0) {
+                        const unit = getSelectedUnit(item.productId);
                         
-                        console.log(`Prodotto: ${productName}, Quantità: ${quantity}, Unità: ${unit}`);
+                        console.log(`✅ ${item.productName}, Q: ${item.quantity}, U: ${unit}`);
                         
                         if (!unit) {
-                            missingUnits.push(productName);
+                            missingUnits.push(item.productName);
                         } else {
                             orderItems.push({
-                                categoryName: categoryName,
-                                productName: productName,
-                                quantity: quantity,
+                                categoryName: item.categoryName,
+                                productName: item.productName,
+                                quantity: item.quantity,
                                 unit: unit
                             });
                         }
