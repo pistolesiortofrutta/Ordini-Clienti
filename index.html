@@ -1,8 +1,12 @@
 <!DOCTYPE html>
+<!-- VERSION: 2.1 - Fix riepilogo prodotti completo -->
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Ordini Frutta e Verdura</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -887,6 +891,8 @@
             // GESTIONE ORDINE
             // ============================================
             window.generateSummary = async function() {
+                console.log('🔥🔥🔥 GENERATE SUMMARY - VERSION 2.1 - FIX COMPLETO 🔥🔥🔥');
+                
                 const customerName = document.getElementById('customerName').value.trim();
                 const customerPhone = document.getElementById('customerPhone').value.trim();
                 const deliveryDate = document.getElementById('deliveryDate').value;
@@ -908,6 +914,8 @@
                         const categoryName = input.getAttribute('data-category-name');
                         const unit = getSelectedUnit(productId);
                         
+                        console.log(`Prodotto: ${productName}, Quantità: ${quantity}, Unità: ${unit}`);
+                        
                         if (!unit) {
                             missingUnits.push(productName);
                         } else {
@@ -920,6 +928,9 @@
                         }
                     }
                 });
+
+                console.log('Order Items raccolti:', orderItems);
+                console.log('Prodotti senza unità:', missingUnits);
 
                 if (missingUnits.length > 0) {
                     alert(`⚠️ Per favore, seleziona l'unità di misura per:\n\n${missingUnits.join('\n')}`);
