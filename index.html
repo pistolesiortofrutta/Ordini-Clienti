@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- VERSION: 2.2 - Fix input duplicati ricerca/categorie -->
+<!-- VERSION: 2.3 - Sincronizzazione input ricerca/categorie -->
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -758,6 +758,7 @@
                                            data-product-id="${product.id}"
                                            data-product-name="${product.nome}"
                                            data-category-name="${category.nome}"
+                                           oninput="syncProductValue('${product.id}', this.value)"
                                            onclick="event.stopPropagation()">
                                     <div class="unit-toggle" data-product-id="${product.id}" onclick="event.stopPropagation()">
                                         <div class="unit-option" onclick="selectUnit(event, '${product.id}', 'Cassa')">Cassa</div>
@@ -809,6 +810,24 @@
                     toggle.querySelectorAll('.unit-option').forEach(opt => opt.classList.remove('active'));
                     event.target.classList.add('active');
                 }
+                
+                // Sincronizza l'unità selezionata su TUTTI i toggle per questo prodotto
+                document.querySelectorAll(`.unit-toggle[data-product-id="${productId}"]`).forEach(toggle => {
+                    toggle.querySelectorAll('.unit-option').forEach(opt => {
+                        opt.classList.remove('active');
+                        if (opt.textContent === unit) {
+                            opt.classList.add('active');
+                        }
+                    });
+                });
+            }
+
+            // Sincronizza il valore tra ricerca e categorie
+            window.syncProductValue = function(productId, value) {
+                // Trova TUTTI gli input con questo product-id e imposta il valore
+                document.querySelectorAll(`input[data-product-id="${productId}"]`).forEach(input => {
+                    input.value = value;
+                });
             }
 
             function getSelectedUnit(productId) {
@@ -864,6 +883,7 @@
                                        data-product-id="${product.id}"
                                        data-product-name="${product.nome}"
                                        data-category-name="${category.nome}"
+                                       oninput="syncProductValue('${product.id}', this.value)"
                                        onclick="event.stopPropagation()">
                                 <div class="unit-toggle" data-product-id="${product.id}" onclick="event.stopPropagation()">
                                     <div class="unit-option" onclick="selectUnit(event, '${product.id}', 'Cassa')">Cassa</div>
@@ -891,7 +911,7 @@
             // GESTIONE ORDINE
             // ============================================
             window.generateSummary = async function() {
-                console.log('🔥🔥🔥 GENERATE SUMMARY - VERSION 2.2 - FIX INPUT DUPLICATI 🔥🔥🔥');
+                console.log('🔥🔥🔥 VERSION 2.3 - SINCRONIZZAZIONE COMPLETA 🔥🔥🔥');
                 
                 const customerName = document.getElementById('customerName').value.trim();
                 const customerPhone = document.getElementById('customerPhone').value.trim();
@@ -915,14 +935,17 @@
                     const productId = input.getAttribute('data-product-id');
                     const productName = input.getAttribute('data-product-name');
                     
-                    // Se questo prodotto ha già un valore, prendi il più grande (non-zero)
-                    if (!productValues[productId] || (quantity > 0 && quantity > (productValues[productId].quantity || 0))) {
+                    // Se questo prodotto non è ancora stato visto, o ha un valore > 0, salvalo
+                    if (!productValues[productId]) {
                         productValues[productId] = {
                             quantity: quantity || 0,
                             productName: productName,
                             categoryName: input.getAttribute('data-category-name'),
                             productId: productId
                         };
+                    } else if (quantity > 0) {
+                        // Se troviamo un valore > 0, sovrascrive sempre (viene dalla ricerca o categoria aperta)
+                        productValues[productId].quantity = quantity;
                     }
                 });
                 
