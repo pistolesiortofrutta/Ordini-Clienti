@@ -898,6 +898,7 @@
 
                 const allInputs = document.querySelectorAll('input[type="number"][data-product-id]');
                 let orderItems = [];
+                let missingUnits = [];
                 
                 allInputs.forEach(input => {
                     const quantity = parseFloat(input.value);
@@ -908,18 +909,22 @@
                         const unit = getSelectedUnit(productId);
                         
                         if (!unit) {
-                            alert(`Per favore, seleziona l'unità di misura per ${productName}`);
-                            throw new Error('Unit not selected');
+                            missingUnits.push(productName);
+                        } else {
+                            orderItems.push({
+                                categoryName: categoryName,
+                                productName: productName,
+                                quantity: quantity,
+                                unit: unit
+                            });
                         }
-                        
-                        orderItems.push({
-                            categoryName: categoryName,
-                            productName: productName,
-                            quantity: quantity,
-                            unit: unit
-                        });
                     }
                 });
+
+                if (missingUnits.length > 0) {
+                    alert(`⚠️ Per favore, seleziona l'unità di misura per:\n\n${missingUnits.join('\n')}`);
+                    return;
+                }
 
                 if (orderItems.length === 0) {
                     alert('Seleziona almeno un prodotto per generare il riepilogo.');
