@@ -764,8 +764,9 @@
                     });
 
                     categoryCard.innerHTML = `
-                        <div class="category-header" style="background: ${category.colore}">
-                            ${category.icona} ${category.nome.toUpperCase()}
+                        <div class="category-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); cursor: pointer;">
+                            <div style="font-size: 3em; margin-bottom: 10px;">${category.icona}</div>
+                            <div style="font-size: 1em; font-weight: 600; color: white;">${category.nome}</div>
                         </div>
                         <div class="products" id="products-${category.id}">
                             ${productsHTML}
