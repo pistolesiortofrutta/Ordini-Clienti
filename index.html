@@ -906,11 +906,16 @@
                 let orderItems = [];
                 let missingUnits = [];
                 
+                console.log(`📊 Totale input trovati: ${allInputs.length}`);
+                
                 allInputs.forEach(input => {
                     const quantity = parseFloat(input.value);
+                    const productName = input.getAttribute('data-product-name');
+                    
+                    console.log(`🔍 Input: ${productName}, Value: "${input.value}", Parsed: ${quantity}`);
+                    
                     if (quantity > 0) {
                         const productId = input.getAttribute('data-product-id');
-                        const productName = input.getAttribute('data-product-name');
                         const categoryName = input.getAttribute('data-category-name');
                         const unit = getSelectedUnit(productId);
                         
