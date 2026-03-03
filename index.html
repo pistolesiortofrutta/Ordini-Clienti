@@ -724,7 +724,9 @@
                 container.innerHTML = '';
 
                 categoriesData.forEach(category => {
-                    const categoryProducts = productsData.filter(p => p.categoria_id === category.id);
+                    const categoryProducts = productsData
+                        .filter(p => p.categoria_id === category.id)
+                        .sort((a, b) => a.nome.localeCompare(b.nome, 'it'));
                     
                     const categoryCard = document.createElement('div');
                     categoryCard.className = 'category-card';
