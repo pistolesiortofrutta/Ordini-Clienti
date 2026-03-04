@@ -968,8 +968,14 @@
                     const select = document.getElementById('clienteSelect');
                     if (!select) return;
                     
-                    select.innerHTML = '<option value="">-- Seleziona --</option>';
+                    // Rimuovi duplicati per nome (usa Map per tenere solo l'ultimo per ogni nome)
+                    const clientiUnique = new Map();
                     clienti.forEach(cliente => {
+                        clientiUnique.set(cliente.nome, cliente);
+                    });
+                    
+                    select.innerHTML = '<option value="">-- Seleziona --</option>';
+                    Array.from(clientiUnique.values()).forEach(cliente => {
                         select.innerHTML += `<option value="${cliente.id}">${cliente.nome}</option>`;
                     });
                 } catch (error) {
