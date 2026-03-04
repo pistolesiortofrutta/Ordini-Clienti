@@ -1411,12 +1411,16 @@
             window.generateSummary = async function() {
                 console.log('🔥🔥🔥 VERSION 2.3 - SINCRONIZZAZIONE COMPLETA 🔥🔥🔥');
                 
-                const customerName = document.getElementById('customerName').value.trim();
-                const customerPhone = document.getElementById('customerPhone').value.trim();
+                // Verifica login
+                if (!loggedCliente) {
+                    alert('Errore: devi essere loggato per generare un ordine');
+                    return;
+                }
+                
                 const deliveryDate = document.getElementById('deliveryDate').value;
                 
-                if (!customerName || !customerPhone || !deliveryDate) {
-                    alert('Per favore, compila tutti i campi obbligatori (Nome, Telefono, Data di Consegna).');
+                if (!deliveryDate) {
+                    alert('Per favore, seleziona la data di consegna.');
                     return;
                 }
 
@@ -1505,10 +1509,13 @@
                 });
 
                 // Genera HTML riepilogo MODIFICABILE
+                const customerName = loggedCliente ? loggedCliente.nome : 'Cliente';
+                const customerPhone = loggedCliente ? loggedCliente.telefono : '';
+                
                 let summaryHTML = `
                     <div class="summary-item">
-                        <strong>Cliente:</strong> ${loggedCliente.nome}<br>
-                        <strong>Telefono:</strong> ${loggedCliente.telefono}<br>
+                        <strong>Cliente:</strong> ${customerName}<br>
+                        <strong>Telefono:</strong> ${customerPhone}<br>
                         <strong>Data di Consegna:</strong> ${formattedDate}
                     </div>
                 `;
@@ -1783,10 +1790,13 @@
                     groupedItems[item.categoryName].push(item);
                 });
 
+                const customerName = loggedCliente ? loggedCliente.nome : 'Cliente';
+                const customerPhone = loggedCliente ? loggedCliente.telefono : '';
+
                 let summaryHTML = `
                     <div class="summary-item">
-                        <strong>Cliente:</strong> ${loggedCliente.nome}<br>
-                        <strong>Telefono:</strong> ${loggedCliente.telefono}<br>
+                        <strong>Cliente:</strong> ${customerName}<br>
+                        <strong>Telefono:</strong> ${customerPhone}<br>
                         <strong>Data di Consegna:</strong> ${formattedDate}
                     </div>
                 `;
@@ -1838,6 +1848,11 @@
                 
                 const deliveryDate = document.getElementById('deliveryDate').value;
                 const notes = document.getElementById('orderNotes').value.trim();
+                
+                if (!loggedCliente) {
+                    alert('Errore: devi essere loggato per inviare un ordine');
+                    return;
+                }
                 
                 // Mostra loading
                 document.getElementById('loadingOverlay').style.display = 'flex';
