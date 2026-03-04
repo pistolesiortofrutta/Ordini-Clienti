@@ -1600,128 +1600,34 @@
                 }
             }
 
-            window.sendOrder = async function() {
-                document.getElementById('loadingOverlay').classList.add('active');
-                
-                try {
-                    const customerName = document.getElementById('customerName').value.trim();
-                    const customerPhone = document.getElementById('customerPhone').value.trim();
-                    const deliveryDate = document.getElementById('deliveryDate').value;
-                    const notes = document.getElementById('orderNotes').value.trim();
-                    
-                    // Raccogli prodotti ordinati
-                    const allInputs = document.querySelectorAll('input[type="number"][data-product-id]');
-                    const prodotti = [];
-                    
-                    allInputs.forEach(input => {
-                        const quantity = parseFloat(input.value);
-                        if (quantity > 0) {
-                            const productId = input.getAttribute('data-product-id');
-                            const productName = input.getAttribute('data-product-name');
-                            const categoryName = input.getAttribute('data-category-name');
-                            const unit = getSelectedUnit(productId);
-                            
-                            if (!unit) {
-                                throw new Error(`Seleziona l'unità di misura per ${productName}`);
-                            }
-                            
-                            prodotti.push({
-                                nome: productName,
-                                categoria: categoryName,
-                                quantita: quantity,
-                                unita: unit
-                            });
-                        }
-                    });
-
-                    if (prodotti.length === 0) {
-                        throw new Error('Seleziona almeno un prodotto');
-                    }
-
-                    // Prepara dati ordine per Edge Function
-                    const orderData = {
-                        cliente_nome: customerName,
-                        cliente_telefono: customerPhone,
-                        cliente_email: '',
-                        data_consegna: deliveryDate,
-                        note: notes,
-                        prodotti: prodotti
-                    };
-
-                    console.log('📤 Invio ordine tramite Edge Function...');
-                    console.log('Dati ordine:', orderData);
-
-                    // Chiama Edge Function per invio automatico email
-                    const response = await fetch(
-                        `${SUPABASE_URL}/functions/v1/send-order`,
-                        {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                            },
-                            body: JSON.stringify({ ordine: orderData })
-                        }
-                    );
-
-                    const result = await response.json();
-                    console.log('Risposta Edge Function:', result);
-
-                    if (!response.ok || !result.success) {
-                        throw new Error(result.error || 'Errore durante l\'invio');
-                    }
-
-                    console.log('✅ Ordine inviato con successo!');
-
-                    // Successo!
-                    document.getElementById('loadingOverlay').classList.remove('active');
-                    document.getElementById('successMessage').innerHTML = `
-                        ✅ Ordine inviato con successo!<br>
-                        <small>Email inviata a pistolesiortofrutta@gmail.com</small>
-                    `;
-                    document.getElementById('successMessage').classList.add('active');
-                    
-                    setTimeout(() => {
-                        document.getElementById('successMessage').classList.remove('active');
-                    }, 7000);
-
-                } catch (error) {
-                    console.error('❌ Errore invio ordine:', error);
-                    document.getElementById('loadingOverlay').classList.remove('active');
-                    
-                    let errorMessage = 'Si è verificato un errore durante l\'invio.';
-                    
-                    if (error.message.includes('Failed to fetch')) {
-                        errorMessage = 'Errore di connessione. Controlla internet e riprova.';
-                    } else if (error.message.includes('Seleziona')) {
-                        errorMessage = error.message;
-                    } else if (error.message) {
-                        errorMessage = error.message;
-                    }
-                    
-                    alert('⚠️ ' + errorMessage);
-                }
-            }
-
             window.resetOrder = function() {
                 if (confirm('Sei sicuro di voler azzerare l\'ordine e ricominciare da capo?')) {
-                    document.getElementById('customerName').value = '';
-                    document.getElementById('customerPhone').value = '';
+                    // Reset data consegna a domani
                     const tomorrow = new Date();
                     tomorrow.setDate(tomorrow.getDate() + 1);
                     document.getElementById('deliveryDate').value = tomorrow.toISOString().split('T')[0];
+                    
+                    // Reset note
                     document.getElementById('orderNotes').value = '';
                     
+                    // Reset tutti gli input quantità
                     document.querySelectorAll('input[type="number"]').forEach(input => {
                         input.value = '';
                     });
+                    
+                    // Reset tutte le unità
                     document.querySelectorAll('.unit-option').forEach(option => {
                         option.classList.remove('active');
                     });
                     
+                    // Reset ordine corrente
+                    currentOrderItems = [];
+                    
+                    // Nascondi riepilogo e messaggi
                     document.getElementById('orderSummary').classList.remove('active');
                     document.getElementById('successMessage').classList.remove('active');
                     
+                    // Chiudi tutte le categorie
                     document.querySelectorAll('.category-card').forEach(card => {
                         card.classList.remove('active');
                     });
@@ -1729,6 +1635,7 @@
                         products.classList.remove('active');
                     });
                     
+                    // Scroll to top
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
             }
@@ -1858,6 +1765,7 @@
                 document.getElementById('loadingOverlay').style.display = 'flex';
                 
                 try {
+                    // Salva nel database
                     await saveOrderToDatabase(
                         loggedCliente.nome, 
                         loggedCliente.telefono, 
@@ -1866,9 +1774,53 @@
                         notes
                     );
                     
+                    // Prepara dati per email
+                    const prodotti = currentOrderItems.map(item => ({
+                        nome: item.productName,
+                        categoria: item.categoryName,
+                        quantita: item.quantity,
+                        unita: item.unit
+                    }));
+                    
+                    const orderData = {
+                        cliente_nome: loggedCliente.nome,
+                        cliente_telefono: loggedCliente.telefono,
+                        cliente_email: loggedCliente.email || '',
+                        data_consegna: deliveryDate,
+                        note: notes,
+                        prodotti: prodotti
+                    };
+                    
+                    console.log('📤 Invio email tramite Edge Function...');
+                    
+                    // Chiama Edge Function per invio email
+                    const response = await fetch(
+                        `${SUPABASE_URL}/functions/v1/send-order`,
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                            },
+                            body: JSON.stringify({ ordine: orderData })
+                        }
+                    );
+                    
+                    const result = await response.json();
+                    console.log('Risposta Edge Function:', result);
+                    
+                    if (!response.ok || !result.success) {
+                        console.warn('Errore invio email:', result.error);
+                        // Non bloccare l'ordine se l'email fallisce
+                    }
+                    
                     // Successo!
                     document.getElementById('loadingOverlay').style.display = 'none';
                     document.getElementById('orderSummary').classList.remove('active');
+                    document.getElementById('successMessage').innerHTML = `
+                        ✅ Ordine inviato con successo!<br>
+                        <small>Email inviata a pistolesiortofrutta@gmail.com</small>
+                    `;
                     document.getElementById('successMessage').classList.add('active');
                     
                     setTimeout(() => {
