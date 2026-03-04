@@ -547,6 +547,218 @@
         .loading-content .spinner {
             margin: 20px auto;
         }
+
+        /* Customer Autocomplete */
+        .customer-suggestions {
+            position: absolute;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            width: calc(100% - 4px);
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .customer-suggestions.active {
+            display: block;
+        }
+
+        .customer-suggestion-item {
+            padding: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            transition: all 0.2s;
+        }
+
+        .customer-suggestion-item:hover {
+            background: #f8f9ff;
+        }
+
+        .customer-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .customer-suggestion-name {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .customer-suggestion-phone {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .customer-suggestion-orders {
+            font-size: 0.85em;
+            color: #667eea;
+            margin-top: 4px;
+        }
+
+        .template-buttons {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        /* Modal per Template */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-close {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .template-item {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .template-item:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .template-name {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .template-description {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .template-products {
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #999;
+        }
+
+        /* Login Styles */
+        .login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 60vh;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .login-card h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .customer-info-logged {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .customer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+            margin-bottom: 20px;
+        }
+
+        .customer-header h3 {
+            margin: 0 0 8px 0;
+            color: #2c3e50;
+        }
+
+        .template-buttons-logged {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .template-buttons-logged button {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        @media (max-width: 768px) {
+            .customer-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .template-buttons-logged {
+                flex-direction: column;
+            }
+            
+            .template-buttons-logged button {
+                width: 100%;
+                min-width: auto;
+            }
+            
+            .login-card {
+                padding: 30px 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -570,23 +782,57 @@
                 <p>Caricamento prodotti...</p>
             </div>
 
+            <!-- Login Screen -->
+            <div class="login-screen" id="loginScreen" style="display: none;">
+                <div class="login-card">
+                    <h2>🍎 Accesso Clienti</h2>
+                    <p style="color: #666; margin-bottom: 30px;">Seleziona la tua ragione sociale</p>
+                    
+                    <div class="form-group">
+                        <label for="clienteSelect">Ragione Sociale *</label>
+                        <select id="clienteSelect" required style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em; background: white;">
+                            <option value="">-- Seleziona --</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="clientePassword">Password *</label>
+                        <input type="password" id="clientePassword" placeholder="Inserisci la password" required>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="loginCliente()" style="width: 100%; padding: 15px; font-size: 1.1em;">
+                        🔐 ACCEDI
+                    </button>
+                    
+                    <p style="text-align: center; margin-top: 20px; color: #999; font-size: 0.9em;">
+                        Non hai le credenziali? Contattaci al 📞 3938045055537
+                    </p>
+                </div>
+            </div>
+
             <div id="mainContent" style="display: none;">
-                <!-- Informazioni Cliente -->
-                <div class="customer-info">
-                    <h3>Informazioni Cliente</h3>
-                    <div class="form-group">
-                        <label for="customerName">Nome/Ragione Sociale *</label>
-                        <input type="text" id="customerName" placeholder="Inserisci il nome" required>
+                <!-- Info Cliente Loggato -->
+                <div class="customer-info-logged" id="customerInfoLogged" style="display: none;">
+                    <div class="customer-header">
+                        <div>
+                            <h3>👋 Benvenuto, <span id="loggedCustomerName"></span></h3>
+                            <p style="color: #666; font-size: 0.9em; margin-top: 5px;">
+                                📞 <span id="loggedCustomerPhone"></span> | 📧 <span id="loggedCustomerEmail"></span>
+                            </p>
+                        </div>
+                        <button class="btn btn-secondary" onclick="logoutCliente()" style="padding: 8px 15px; font-size: 0.9em;">
+                            🚪 Esci
+                        </button>
                     </div>
-                    <div class="form-group">
-                        <label for="customerPhone">Telefono *</label>
-                        <input type="tel" id="customerPhone" placeholder="Es: 3331234567" required>
-                    </div>
+                    
                     <div class="form-group">
                         <label for="deliveryDate">Data di Consegna *</label>
-                        <div class="date-input-wrapper">
-                            <input type="date" id="deliveryDate" required>
-                        </div>
+                        <input type="date" id="deliveryDate" required>
+                    </div>
+                    
+                    <div class="template-buttons-logged" style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                        <button class="btn btn-secondary" onclick="loadLastOrder()">🔄 Ripeti Ultimo Ordine</button>
+                        <button class="btn btn-secondary" onclick="showTemplates()">📋 I Miei Template</button>
                     </div>
                 </div>
 
@@ -625,6 +871,7 @@
                     
                     <div class="buttons">
                         <button class="btn btn-send" onclick="sendOrder()">📤 INVIA ORDINE</button>
+                        <button class="btn btn-success" onclick="saveAsTemplate()">💾 Salva come Template</button>
                         <button class="btn btn-secondary" onclick="editOrder()">✏️ Modifica Ordine</button>
                         <button class="btn btn-secondary" onclick="resetOrder()">🔄 Nuovo Ordine</button>
                     </div>
@@ -632,6 +879,39 @@
 
                 <div class="success-message" id="successMessage">
                     ✅ Ordine inviato con successo!
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Template -->
+        <div class="modal" id="templateModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>📋 I Tuoi Template</h3>
+                    <button class="modal-close" onclick="closeTemplateModal()">✕</button>
+                </div>
+                <div id="templateList"></div>
+            </div>
+        </div>
+
+        <!-- Modal Salva Template -->
+        <div class="modal" id="saveTemplateModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>💾 Salva come Template</h3>
+                    <button class="modal-close" onclick="closeSaveTemplateModal()">✕</button>
+                </div>
+                <div class="form-group">
+                    <label for="templateName">Nome Template *</label>
+                    <input type="text" id="templateName" placeholder="Es: Ordine Settimanale">
+                </div>
+                <div class="form-group">
+                    <label for="templateDescription">Descrizione (opzionale)</label>
+                    <textarea id="templateDescription" rows="3" placeholder="Descrivi questo template..."></textarea>
+                </div>
+                <div class="buttons">
+                    <button class="btn btn-success" onclick="confirmSaveTemplate()">💾 Salva</button>
+                    <button class="btn btn-secondary" onclick="closeSaveTemplateModal()">Annulla</button>
                 </div>
             </div>
         </div>
@@ -656,6 +936,11 @@
             let categoriesData = [];
             let productsData = [];
             let activeCategory = null;
+            
+            // Variabili per login clienti
+            let loggedCliente = null;
+            let sessionToken = null;
+            let currentClienteId = null;
 
             // Imposta data minima a domani
             window.addEventListener('DOMContentLoaded', () => {
@@ -665,6 +950,161 @@
                 dateInput.min = tomorrow.toISOString().split('T')[0];
                 dateInput.value = tomorrow.toISOString().split('T')[0];
             });
+
+            // ============================================
+            // FUNZIONI LOGIN CLIENTI
+            // ============================================
+            
+            async function loadClienti() {
+                try {
+                    const { data: clienti, error } = await supabase
+                        .from('clienti')
+                        .select('id, nome')
+                        .eq('attivo', true)
+                        .order('nome');
+                    
+                    if (error) throw error;
+                    
+                    const select = document.getElementById('clienteSelect');
+                    if (!select) return;
+                    
+                    select.innerHTML = '<option value="">-- Seleziona --</option>';
+                    clienti.forEach(cliente => {
+                        select.innerHTML += `<option value="${cliente.id}">${cliente.nome}</option>`;
+                    });
+                } catch (error) {
+                    console.error('Errore caricamento clienti:', error);
+                }
+            }
+
+            window.loginCliente = async function() {
+                const clienteId = document.getElementById('clienteSelect').value;
+                const password = document.getElementById('clientePassword').value;
+                
+                if (!clienteId || !password) {
+                    alert('Seleziona la ragione sociale e inserisci la password');
+                    return;
+                }
+                
+                try {
+                    const { data: cliente, error } = await supabase
+                        .from('clienti')
+                        .select('*')
+                        .eq('id', clienteId)
+                        .eq('password', password)
+                        .eq('attivo', true)
+                        .single();
+                    
+                    if (error || !cliente) {
+                        alert('❌ Credenziali non valide');
+                        return;
+                    }
+                    
+                    const token = 'token_' + Math.random().toString(36).substr(2) + Date.now().toString(36);
+                    await supabase.from('sessioni_clienti').insert({
+                        cliente_id: cliente.id,
+                        token: token
+                    });
+                    
+                    await supabase.from('clienti').update({ 
+                        ultimo_accesso: new Date().toISOString() 
+                    }).eq('id', cliente.id);
+                    
+                    loggedCliente = cliente;
+                    sessionToken = token;
+                    currentClienteId = cliente.id;
+                    localStorage.setItem('sessionToken', token);
+                    
+                    showLoggedInterface();
+                } catch (error) {
+                    console.error('Errore login:', error);
+                    alert('Errore durante il login');
+                }
+            }
+
+            function showLoggedInterface() {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('customerInfoLogged').style.display = 'block';
+                document.getElementById('loggedCustomerName').textContent = loggedCliente.nome;
+                document.getElementById('loggedCustomerPhone').textContent = loggedCliente.telefono || 'Non specificato';
+                document.getElementById('loggedCustomerEmail').textContent = loggedCliente.email || 'Non specificata';
+                document.getElementById('loadingIndicator').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+            }
+
+            window.logoutCliente = function() {
+                if (!confirm('Vuoi davvero uscire?')) return;
+                
+                if (sessionToken) {
+                    supabase.from('sessioni_clienti').delete().eq('token', sessionToken);
+                }
+                
+                loggedCliente = null;
+                sessionToken = null;
+                currentClienteId = null;
+                localStorage.removeItem('sessionToken');
+                
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('customerInfoLogged').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'none';
+                document.getElementById('clientePassword').value = '';
+                
+                resetOrder();
+            }
+
+            async function checkExistingSession() {
+                const token = localStorage.getItem('sessionToken');
+                if (!token) {
+                    document.getElementById('loginScreen').style.display = 'flex';
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    return;
+                }
+                
+                try {
+                    const { data: session, error } = await supabase
+                        .from('sessioni_clienti')
+                        .select('cliente_id, expires_at')
+                        .eq('token', token)
+                        .single();
+                    
+                    if (error || !session || new Date(session.expires_at) < new Date()) {
+                        localStorage.removeItem('sessionToken');
+                        document.getElementById('loginScreen').style.display = 'flex';
+                        document.getElementById('loadingIndicator').style.display = 'none';
+                        return;
+                    }
+                    
+                    const { data: cliente } = await supabase
+                        .from('clienti')
+                        .select('*')
+                        .eq('id', session.cliente_id)
+                        .eq('attivo', true)
+                        .single();
+                    
+                    if (cliente) {
+                        loggedCliente = cliente;
+                        sessionToken = token;
+                        currentClienteId = cliente.id;
+                        showLoggedInterface();
+                    } else {
+                        localStorage.removeItem('sessionToken');
+                        document.getElementById('loginScreen').style.display = 'flex';
+                        document.getElementById('loadingIndicator').style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Errore verifica sessione:', error);
+                    document.getElementById('loginScreen').style.display = 'flex';
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                }
+            }
+
+            window.loadLastOrder = function() {
+                alert('Funzione "Ripeti Ultimo Ordine" - da implementare dopo');
+            }
+
+            window.showTemplates = function() {
+                alert('Funzione "Template" - da implementare dopo');
+            }
 
             // ============================================
             // CARICAMENTO DATI DA SUPABASE
@@ -705,8 +1145,10 @@
                     renderCategories();
                     
                     console.log('✅ Tutto caricato con successo!');
-                    document.getElementById('loadingIndicator').style.display = 'none';
-                    document.getElementById('mainContent').style.display = 'block';
+                    
+                    // Carica clienti e verifica sessione
+                    loadClienti();
+                    checkExistingSession();
 
                 } catch (error) {
                     console.error('❌ ERRORE GENERALE:', error);
@@ -1048,6 +1490,7 @@
                     const { data: order, error: orderError } = await supabase
                         .from('ordini')
                         .insert({
+                            cliente_id: currentClienteId,
                             cliente_nome: customerName,
                             cliente_telefono: customerPhone,
                             note: noteWithDate,
