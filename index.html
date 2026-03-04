@@ -683,6 +683,56 @@
             color: #999;
         }
 
+        /* Riepilogo Modificabile */
+        .summary-product-editable {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .summary-product-editable:last-child {
+            border-bottom: none;
+        }
+
+        .summary-product-editable span:first-child {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .summary-quantity-input {
+            width: 70px;
+            padding: 5px 10px;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 1em;
+            font-weight: bold;
+        }
+
+        .summary-quantity-input:focus {
+            outline: none;
+            border-color: #764ba2;
+        }
+
+        .summary-delete-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 5px;
+            transition: transform 0.2s;
+        }
+
+        .summary-delete-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .summary-delete-btn:active {
+            transform: scale(0.9);
+        }
+
         /* Login Styles */
         .login-screen {
             display: flex;
@@ -1431,13 +1481,17 @@
                     alert('Seleziona almeno un prodotto per generare il riepilogo.');
                     return;
                 }
+                
+                // Salva per template e modifica
+                currentOrderItems = orderItems;
 
                 // Raggruppa per categoria
                 const groupedItems = {};
-                orderItems.forEach(item => {
+                orderItems.forEach((item, index) => {
                     if (!groupedItems[item.categoryName]) {
                         groupedItems[item.categoryName] = [];
                     }
+                    item.index = index; // Aggiungi indice per identificare il prodotto
                     groupedItems[item.categoryName].push(item);
                 });
 
@@ -1450,11 +1504,11 @@
                     day: 'numeric' 
                 });
 
-                // Genera HTML riepilogo
+                // Genera HTML riepilogo MODIFICABILE
                 let summaryHTML = `
                     <div class="summary-item">
-                        <strong>Cliente:</strong> ${customerName}<br>
-                        <strong>Telefono:</strong> ${customerPhone}<br>
+                        <strong>Cliente:</strong> ${loggedCliente.nome}<br>
+                        <strong>Telefono:</strong> ${loggedCliente.telefono}<br>
                         <strong>Data di Consegna:</strong> ${formattedDate}
                     </div>
                 `;
@@ -1464,7 +1518,19 @@
                     summaryHTML += `<div class="summary-category">${category.icona} ${categoryName.toUpperCase()}</div>`;
                     summaryHTML += `<div class="summary-item">`;
                     items.forEach(item => {
-                        summaryHTML += `<div class="summary-product">• ${item.productName}: ${item.quantity} ${item.unit}</div>`;
+                        summaryHTML += `
+                            <div class="summary-product-editable" data-index="${item.index}">
+                                <span>• ${item.productName}:</span>
+                                <input type="number" 
+                                       class="summary-quantity-input" 
+                                       value="${item.quantity}" 
+                                       min="0.5" 
+                                       step="0.5"
+                                       onchange="updateSummaryQuantity(${item.index}, this.value)">
+                                <span>${item.unit}</span>
+                                <button class="summary-delete-btn" onclick="deleteSummaryProduct(${item.index})" title="Rimuovi prodotto">❌</button>
+                            </div>
+                        `;
                     });
                     summaryHTML += `</div>`;
                 }
@@ -1482,9 +1548,8 @@
                 document.getElementById('summaryContent').innerHTML = summaryHTML;
                 document.getElementById('orderSummary').classList.add('active');
 
-                // Salva ordine in Supabase
-                await saveOrderToDatabase(customerName, customerPhone, deliveryDate, orderItems, notes);
-
+                // NON salvare automaticamente - aspetta il click su "Invia Ordine"
+                
                 // Scroll al riepilogo
                 document.getElementById('orderSummary').scrollIntoView({ behavior: 'smooth' });
             }
@@ -1667,6 +1732,364 @@
                 
                 // Scroll alla sezione prodotti
                 document.querySelector('.categories').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            // ============================================
+            // RIEPILOGO MODIFICABILE
+            // ============================================
+            
+            window.updateSummaryQuantity = function(index, newQuantity) {
+                const qty = parseFloat(newQuantity);
+                if (qty > 0) {
+                    currentOrderItems[index].quantity = qty;
+                } else {
+                    alert('La quantità deve essere maggiore di 0');
+                }
+            }
+
+            window.deleteSummaryProduct = function(index) {
+                if (!confirm('Vuoi rimuovere questo prodotto dal riepilogo?')) return;
+                
+                // Rimuovi dall'array
+                currentOrderItems.splice(index, 1);
+                
+                // Rigenera il riepilogo
+                regenerateSummary();
+            }
+
+            function regenerateSummary() {
+                if (currentOrderItems.length === 0) {
+                    alert('Non ci sono più prodotti nell\'ordine!');
+                    document.getElementById('orderSummary').classList.remove('active');
+                    return;
+                }
+                
+                const deliveryDate = document.getElementById('deliveryDate').value;
+                const dateObj = new Date(deliveryDate);
+                const formattedDate = dateObj.toLocaleDateString('it-IT', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+
+                // Raggruppa per categoria
+                const groupedItems = {};
+                currentOrderItems.forEach((item, index) => {
+                    if (!groupedItems[item.categoryName]) {
+                        groupedItems[item.categoryName] = [];
+                    }
+                    item.index = index;
+                    groupedItems[item.categoryName].push(item);
+                });
+
+                let summaryHTML = `
+                    <div class="summary-item">
+                        <strong>Cliente:</strong> ${loggedCliente.nome}<br>
+                        <strong>Telefono:</strong> ${loggedCliente.telefono}<br>
+                        <strong>Data di Consegna:</strong> ${formattedDate}
+                    </div>
+                `;
+
+                for (const [categoryName, items] of Object.entries(groupedItems)) {
+                    const category = categoriesData.find(c => c.nome === categoryName);
+                    summaryHTML += `<div class="summary-category">${category.icona} ${categoryName.toUpperCase()}</div>`;
+                    summaryHTML += `<div class="summary-item">`;
+                    items.forEach(item => {
+                        summaryHTML += `
+                            <div class="summary-product-editable" data-index="${item.index}">
+                                <span>• ${item.productName}:</span>
+                                <input type="number" 
+                                       class="summary-quantity-input" 
+                                       value="${item.quantity}" 
+                                       min="0.5" 
+                                       step="0.5"
+                                       onchange="updateSummaryQuantity(${item.index}, this.value)">
+                                <span>${item.unit}</span>
+                                <button class="summary-delete-btn" onclick="deleteSummaryProduct(${item.index})" title="Rimuovi prodotto">❌</button>
+                            </div>
+                        `;
+                    });
+                    summaryHTML += `</div>`;
+                }
+
+                const notes = document.getElementById('orderNotes').value.trim();
+                if (notes) {
+                    summaryHTML += `
+                        <div class="summary-item">
+                            <strong>Note:</strong><br>
+                            ${notes.replace(/\n/g, '<br>')}
+                        </div>
+                    `;
+                }
+
+                document.getElementById('summaryContent').innerHTML = summaryHTML;
+            }
+
+            // ============================================
+            // INVIA ORDINE
+            // ============================================
+            
+            window.sendOrder = async function() {
+                if (!currentOrderItems || currentOrderItems.length === 0) {
+                    alert('Nessun prodotto da inviare!');
+                    return;
+                }
+                
+                const deliveryDate = document.getElementById('deliveryDate').value;
+                const notes = document.getElementById('orderNotes').value.trim();
+                
+                // Mostra loading
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                
+                try {
+                    await saveOrderToDatabase(
+                        loggedCliente.nome, 
+                        loggedCliente.telefono, 
+                        deliveryDate, 
+                        currentOrderItems, 
+                        notes
+                    );
+                    
+                    // Successo!
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    document.getElementById('orderSummary').classList.remove('active');
+                    document.getElementById('successMessage').classList.add('active');
+                    
+                    setTimeout(() => {
+                        document.getElementById('successMessage').classList.remove('active');
+                        resetOrder();
+                    }, 3000);
+                    
+                } catch (error) {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    alert('Errore nell\'invio dell\'ordine. Riprova.');
+                    console.error('Errore invio:', error);
+                }
+            }
+
+            // ============================================
+            // RIPETI ULTIMO ORDINE
+            // ============================================
+            
+            window.loadLastOrder = async function() {
+                if (!currentClienteId) {
+                    alert('Errore: cliente non identificato');
+                    return;
+                }
+                
+                try {
+                    // Trova l'ultimo ordine
+                    const { data: lastOrder, error: orderError } = await supabase
+                        .from('ordini')
+                        .select('id, created_at, data_consegna')
+                        .eq('cliente_id', currentClienteId)
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .single();
+                    
+                    if (orderError) {
+                        alert('Nessun ordine precedente trovato');
+                        return;
+                    }
+                    
+                    // Carica i dettagli
+                    const { data: details, error: detailsError } = await supabase
+                        .from('ordini_dettagli')
+                        .select('*')
+                        .eq('ordine_id', lastOrder.id);
+                    
+                    if (detailsError) throw detailsError;
+                    
+                    // Popola i campi
+                    await populateOrderFields(details);
+                    
+                    // Scroll ai prodotti
+                    document.querySelector('.categories').scrollIntoView({ behavior: 'smooth' });
+                    
+                    alert(`✅ Caricato ultimo ordine del ${new Date(lastOrder.created_at).toLocaleDateString('it-IT')}`);
+                    
+                } catch (error) {
+                    console.error('Errore caricamento ordine:', error);
+                    alert('Errore nel caricamento dell\'ultimo ordine');
+                }
+            }
+
+            // ============================================
+            // TEMPLATE
+            // ============================================
+            
+            window.showTemplates = async function() {
+                if (!currentClienteId) {
+                    alert('Errore: cliente non identificato');
+                    return;
+                }
+                
+                try {
+                    const { data: templates, error } = await supabase
+                        .from('template_ordini')
+                        .select('*')
+                        .eq('cliente_id', currentClienteId)
+                        .order('created_at', { ascending: false });
+                    
+                    if (error) throw error;
+                    
+                    const modal = document.getElementById('templateModal');
+                    const list = document.getElementById('templateList');
+                    
+                    if (!templates || templates.length === 0) {
+                        list.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">Nessun template salvato.<br>Crea il primo ordine e salvalo come template!</p>';
+                    } else {
+                        let html = '';
+                        for (const template of templates) {
+                            const { count } = await supabase
+                                .from('template_dettagli')
+                                .select('*', { count: 'exact', head: true })
+                                .eq('template_id', template.id);
+                            
+                            html += `
+                                <div class="template-item" onclick="loadTemplate('${template.id}')">
+                                    <div class="template-name">${template.nome_template}</div>
+                                    ${template.descrizione ? `<div class="template-description">${template.descrizione}</div>` : ''}
+                                    <div class="template-products">${count || 0} prodotti</div>
+                                </div>
+                            `;
+                        }
+                        list.innerHTML = html;
+                    }
+                    
+                    modal.classList.add('active');
+                } catch (error) {
+                    console.error('Errore caricamento template:', error);
+                    alert('Errore nel caricamento dei template');
+                }
+            }
+
+            window.loadTemplate = async function(templateId) {
+                try {
+                    const { data: details, error } = await supabase
+                        .from('template_dettagli')
+                        .select('*')
+                        .eq('template_id', templateId);
+                    
+                    if (error) throw error;
+                    
+                    await populateOrderFields(details);
+                    
+                    closeTemplateModal();
+                    
+                    // Scroll ai prodotti
+                    document.querySelector('.categories').scrollIntoView({ behavior: 'smooth' });
+                    
+                    alert('✅ Template caricato! Modifica le quantità se necessario.');
+                } catch (error) {
+                    console.error('Errore caricamento template:', error);
+                    alert('Errore nel caricamento del template');
+                }
+            }
+
+            window.closeTemplateModal = function() {
+                document.getElementById('templateModal').classList.remove('active');
+            }
+
+            window.saveAsTemplate = function() {
+                if (!currentClienteId) {
+                    alert('Errore: cliente non identificato');
+                    return;
+                }
+                
+                if (!currentOrderItems || currentOrderItems.length === 0) {
+                    alert('Nessun prodotto nell\'ordine da salvare');
+                    return;
+                }
+                
+                document.getElementById('saveTemplateModal').classList.add('active');
+            }
+
+            window.confirmSaveTemplate = async function() {
+                const templateName = document.getElementById('templateName').value.trim();
+                const templateDescription = document.getElementById('templateDescription').value.trim();
+                
+                if (!templateName) {
+                    alert('Inserisci un nome per il template');
+                    return;
+                }
+                
+                try {
+                    // Crea template
+                    const { data: template, error: templateError } = await supabase
+                        .from('template_ordini')
+                        .insert({
+                            cliente_id: currentClienteId,
+                            nome_template: templateName,
+                            descrizione: templateDescription || null
+                        })
+                        .select()
+                        .single();
+                    
+                    if (templateError) throw templateError;
+                    
+                    // Salva dettagli
+                    const dettagli = currentOrderItems.map(item => ({
+                        template_id: template.id,
+                        prodotto_nome: item.productName,
+                        categoria_nome: item.categoryName,
+                        quantita: item.quantity,
+                        unita: item.unit
+                    }));
+                    
+                    const { error: detailsError } = await supabase
+                        .from('template_dettagli')
+                        .insert(dettagli);
+                    
+                    if (detailsError) throw detailsError;
+                    
+                    alert(`✅ Template "${templateName}" salvato con successo!`);
+                    closeSaveTemplateModal();
+                    
+                    // Pulisci campi
+                    document.getElementById('templateName').value = '';
+                    document.getElementById('templateDescription').value = '';
+                    
+                } catch (error) {
+                    console.error('Errore salvataggio template:', error);
+                    alert('Errore nel salvataggio del template');
+                }
+            }
+
+            window.closeSaveTemplateModal = function() {
+                document.getElementById('saveTemplateModal').classList.remove('active');
+            }
+
+            // ============================================
+            // FUNZIONI HELPER
+            // ============================================
+            
+            async function populateOrderFields(details) {
+                // Reset tutti i campi
+                document.querySelectorAll('input[type="number"]').forEach(input => input.value = '');
+                document.querySelectorAll('.unit-option').forEach(opt => opt.classList.remove('active'));
+                
+                // Popola i campi
+                for (const detail of details) {
+                    // Trova il prodotto per nome
+                    const product = productsData.find(p => p.nome === detail.prodotto_nome);
+                    if (!product) continue;
+                    
+                    // Imposta quantità
+                    const inputs = document.querySelectorAll(`input[data-product-id="${product.id}"]`);
+                    inputs.forEach(input => input.value = detail.quantita);
+                    
+                    // Imposta unità
+                    const toggles = document.querySelectorAll(`.unit-toggle[data-product-id="${product.id}"]`);
+                    toggles.forEach(toggle => {
+                        toggle.querySelectorAll('.unit-option').forEach(opt => {
+                            if (opt.textContent === detail.unita) {
+                                opt.classList.add('active');
+                            }
+                        });
+                    });
+                }
             }
 
             // ============================================
