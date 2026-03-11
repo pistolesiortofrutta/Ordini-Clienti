@@ -1964,9 +1964,18 @@
 
             window.loadTemplate = async function(templateId) {
                 try {
+                    // Carica dettagli template con dati prodotto (LEFT JOIN)
                     const { data: details, error } = await supabase
                         .from('template_dettagli')
-                        .select('*')
+                        .select(`
+                            *,
+                            prodotti (
+                                id,
+                                nome,
+                                attivo,
+                                categoria_id
+                            )
+                        `)
                         .eq('template_id', templateId);
                     
                     if (error) throw error;
@@ -1978,7 +1987,14 @@
                     // Scroll ai prodotti
                     document.querySelector('.categories').scrollIntoView({ behavior: 'smooth' });
                     
-                    alert('✅ Template caricato! Modifica le quantità se necessario.');
+                    // Conta prodotti non disponibili
+                    const unavailable = details.filter(d => !d.prodotti || !d.prodotti.attivo).length;
+                    
+                    if (unavailable > 0) {
+                        alert(`✅ Template caricato!\n\n⚠️ ${unavailable} prodotto/i non più disponibile/i (mostrato in rosso).\nModifica le quantità se necessario.`);
+                    } else {
+                        alert('✅ Template caricato! Modifica le quantità se necessario.');
+                    }
                 } catch (error) {
                     console.error('Errore caricamento template:', error);
                     alert('Errore nel caricamento del template');
@@ -2067,11 +2083,19 @@
                 document.querySelectorAll('input[type="number"]').forEach(input => input.value = '');
                 document.querySelectorAll('.unit-option').forEach(opt => opt.classList.remove('active'));
                 
+                // Rimuovi eventuali messaggi di prodotti non disponibili precedenti
+                document.querySelectorAll('.unavailable-product-notice').forEach(el => el.remove());
+                
                 // Popola i campi
                 for (const detail of details) {
-                    // Trova il prodotto per nome
-                    const product = productsData.find(p => p.nome === detail.prodotto_nome);
-                    if (!product) continue;
+                    // Controlla se il prodotto esiste ed è attivo
+                    if (!detail.prodotti || !detail.prodotti.attivo) {
+                        // PRODOTTO NON DISPONIBILE
+                        await showUnavailableProductNotice(detail);
+                        continue;
+                    }
+                    
+                    const product = detail.prodotti;
                     
                     // Imposta quantità
                     const inputs = document.querySelectorAll(`input[data-product-id="${product.id}"]`);
@@ -2088,6 +2112,161 @@
                     });
                 }
             }
+            
+            async function showUnavailableProductNotice(detail) {
+                // Trova la categoria del prodotto o usa la prima categoria come fallback
+                let targetCategory = document.querySelector('.category-card');
+                
+                // Prova a trovare la categoria corretta se abbiamo categoria_id
+                if (detail.prodotti && detail.prodotti.categoria_id) {
+                    const categoryCard = document.querySelector(`.category-card[data-category-id="${detail.prodotti.categoria_id}"]`);
+                    if (categoryCard) targetCategory = categoryCard;
+                }
+                
+                if (!targetCategory) {
+                    // Se non troviamo nessuna categoria, aggiungiamo all'inizio della lista categorie
+                    targetCategory = document.querySelector('.categories');
+                    if (!targetCategory) return;
+                }
+                
+                // Crea elemento di notifica
+                const notice = document.createElement('div');
+                notice.className = 'unavailable-product-notice';
+                notice.style.cssText = `
+                    background: linear-gradient(135deg, #fee 0%, #fdd 100%);
+                    border: 2px solid #e74c3c;
+                    border-radius: 12px;
+                    padding: 15px 20px;
+                    margin: 10px 0;
+                    box-shadow: 0 2px 8px rgba(231,76,60,0.2);
+                `;
+                
+                notice.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="font-size: 2em;">❌</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; color: #c0392b; font-size: 1.1em; margin-bottom: 5px;">
+                                ${detail.prodotto_nome || 'Prodotto rimosso'}
+                            </div>
+                            <div style="color: #e74c3c; font-size: 0.95em;">
+                                ${detail.quantita} ${detail.unita} - <strong>Non più disponibile nel catalogo</strong>
+                            </div>
+                            <div style="color: #999; font-size: 0.85em; margin-top: 5px;">
+                                Questo prodotto è stato rimosso o disattivato
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Inserisci la notifica
+                if (targetCategory.classList.contains('categories')) {
+                    // Inserisci come primo elemento nelle categorie
+                    targetCategory.insertBefore(notice, targetCategory.firstChild);
+                } else {
+                    // Inserisci dopo l'header della categoria
+                    const products = targetCategory.querySelector('.category-products');
+                    if (products) {
+                        products.insertBefore(notice, products.firstChild);
+                    } else {
+                        targetCategory.appendChild(notice);
+                    }
+                }
+            }
+
+            // ============================================
+            // CUSTOM NUMERIC KEYPAD
+            // ============================================
+            
+            let currentKeypadInput = null;
+            let currentKeypadProductName = '';
+            
+            window.openKeypad = function(inputElement, productName) {
+                currentKeypadInput = inputElement;
+                currentKeypadProductName = productName;
+                
+                // Mostra tastierino
+                document.getElementById('customKeypad').style.display = 'block';
+                document.getElementById('keypadProductName').textContent = productName;
+                document.getElementById('keypadDisplay').value = inputElement.value || '0';
+                
+                // Blur input nativo per non mostrare tastierino del sistema
+                inputElement.blur();
+                
+                // Previeni scroll della pagina
+                document.body.style.overflow = 'hidden';
+            }
+            
+            window.closeKeypad = function() {
+                document.getElementById('customKeypad').style.display = 'none';
+                currentKeypadInput = null;
+                currentKeypadProductName = '';
+                
+                // Ripristina scroll
+                document.body.style.overflow = '';
+            }
+            
+            window.keypadPress = function(digit) {
+                const display = document.getElementById('keypadDisplay');
+                let value = display.value;
+                
+                if (value === '0' && digit !== '.') {
+                    // Sostituisci 0 iniziale
+                    value = digit;
+                } else if (digit === '.' && value.includes('.')) {
+                    // Già presente un punto decimale
+                    return;
+                } else {
+                    value += digit;
+                }
+                
+                display.value = value;
+            }
+            
+            window.keypadBackspace = function() {
+                const display = document.getElementById('keypadDisplay');
+                let value = display.value;
+                
+                if (value.length > 1) {
+                    value = value.slice(0, -1);
+                } else {
+                    value = '0';
+                }
+                
+                display.value = value;
+            }
+            
+            window.keypadAddValue = function(amount) {
+                const display = document.getElementById('keypadDisplay');
+                let current = parseFloat(display.value) || 0;
+                current += amount;
+                display.value = current.toString();
+            }
+            
+            window.keypadConfirm = function() {
+                if (!currentKeypadInput) return;
+                
+                const value = document.getElementById('keypadDisplay').value;
+                currentKeypadInput.value = value;
+                
+                // Trigger oninput event per sincronizzare
+                const event = new Event('input', { bubbles: true });
+                currentKeypadInput.dispatchEvent(event);
+                
+                // Chiudi tastierino
+                closeKeypad();
+            }
+            
+            // Modifica gli input per aprire tastierino custom su focus
+            function setupCustomKeypad() {
+                // Intercetta focus su tutti gli input numerici
+                document.addEventListener('focusin', function(e) {
+                    if (e.target.type === 'number' && e.target.dataset.productId) {
+                        e.preventDefault();
+                        const productName = e.target.dataset.productName || 'Prodotto';
+                        openKeypad(e.target, productName);
+                    }
+                }, true);
+            }
 
             // ============================================
             // INIZIALIZZAZIONE
@@ -2098,10 +2277,74 @@
             window.addEventListener('DOMContentLoaded', () => {
                 console.log('📄 DOM caricato, avvio loadData()...');
                 loadData();
+                setupCustomKeypad();
             });
             
             console.log('✅ Script caricato correttamente');
         })();
     </script>
+
+    <!-- Custom Numeric Keypad -->
+    <div id="customKeypad" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 3px solid #2ecc71; box-shadow: 0 -4px 20px rgba(0,0,0,0.2); z-index: 10000; padding: 15px; max-width: 600px; margin: 0 auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #eee;">
+            <div>
+                <div style="font-size: 0.9em; color: #666;">Inserisci quantità per:</div>
+                <div id="keypadProductName" style="font-weight: bold; font-size: 1.1em; color: #2ecc71;">Prodotto</div>
+            </div>
+            <button onclick="closeKeypad()" style="background: #e74c3c; color: white; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 1.2em; cursor: pointer; font-weight: bold;">✕</button>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center;">
+            <input type="text" id="keypadDisplay" readonly value="0" style="width: 100%; font-size: 2em; font-weight: bold; text-align: center; border: 2px solid #2ecc71; border-radius: 8px; padding: 10px; background: white;">
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+            <button onclick="keypadPress('1')" class="keypad-btn">1</button>
+            <button onclick="keypadPress('2')" class="keypad-btn">2</button>
+            <button onclick="keypadPress('3')" class="keypad-btn">3</button>
+            <button onclick="keypadBackspace()" class="keypad-btn" style="background: #e74c3c; color: white; font-size: 1.2em;">⌫</button>
+            
+            <button onclick="keypadPress('4')" class="keypad-btn">4</button>
+            <button onclick="keypadPress('5')" class="keypad-btn">5</button>
+            <button onclick="keypadPress('6')" class="keypad-btn">6</button>
+            <button onclick="keypadAddValue(0.5)" class="keypad-btn" style="background: #3498db; color: white; font-size: 0.9em;">+0.5</button>
+            
+            <button onclick="keypadPress('7')" class="keypad-btn">7</button>
+            <button onclick="keypadPress('8')" class="keypad-btn">8</button>
+            <button onclick="keypadPress('9')" class="keypad-btn">9</button>
+            <button onclick="keypadAddValue(1)" class="keypad-btn" style="background: #3498db; color: white;">+1</button>
+            
+            <button onclick="keypadPress('.')" class="keypad-btn">.</button>
+            <button onclick="keypadPress('0')" class="keypad-btn">0</button>
+            <button onclick="keypadConfirm()" class="keypad-btn" style="background: #2ecc71; color: white; font-size: 1.3em; font-weight: bold;">✓</button>
+            <button onclick="keypadAddValue(5)" class="keypad-btn" style="background: #3498db; color: white;">+5</button>
+        </div>
+    </div>
+
+    <style>
+        .keypad-btn {
+            padding: 18px;
+            font-size: 1.4em;
+            font-weight: bold;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .keypad-btn:active {
+            transform: scale(0.95);
+            background: #f0f0f0;
+        }
+        
+        .keypad-btn:hover {
+            background: #f8f9fa;
+            border-color: #2ecc71;
+        }
+    </style>
+
 </body>
 </html>
