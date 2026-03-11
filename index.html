@@ -1898,6 +1898,19 @@
                     
                     if (detailsError) throw detailsError;
                     
+                    // Carica info prodotti per ogni dettaglio
+                    for (const detail of details) {
+                        if (detail.prodotto_id) {
+                            const { data: prodotto } = await supabase
+                                .from('prodotti')
+                                .select('id, nome, attivo, categoria_id')
+                                .eq('id', detail.prodotto_id)
+                                .single();
+                            
+                            detail.prodotti = prodotto;
+                        }
+                    }
+                    
                     // Popola i campi
                     await populateOrderFields(details);
                     
@@ -1908,7 +1921,7 @@
                     
                 } catch (error) {
                     console.error('Errore caricamento ordine:', error);
-                    alert('Errore nel caricamento dell\'ultimo ordine');
+                    alert('Errore nel caricamento dell\'ultimo ordine: ' + error.message);
                 }
             }
 
@@ -1964,21 +1977,26 @@
 
             window.loadTemplate = async function(templateId) {
                 try {
-                    // Carica dettagli template con dati prodotto (LEFT JOIN)
+                    // Carica dettagli template
                     const { data: details, error } = await supabase
                         .from('template_dettagli')
-                        .select(`
-                            *,
-                            prodotti (
-                                id,
-                                nome,
-                                attivo,
-                                categoria_id
-                            )
-                        `)
+                        .select('*')
                         .eq('template_id', templateId);
                     
                     if (error) throw error;
+                    
+                    // Carica info prodotti per ogni dettaglio
+                    for (const detail of details) {
+                        if (detail.prodotto_id) {
+                            const { data: prodotto } = await supabase
+                                .from('prodotti')
+                                .select('id, nome, attivo, categoria_id')
+                                .eq('id', detail.prodotto_id)
+                                .single();
+                            
+                            detail.prodotti = prodotto;
+                        }
+                    }
                     
                     await populateOrderFields(details);
                     
@@ -1997,7 +2015,7 @@
                     }
                 } catch (error) {
                     console.error('Errore caricamento template:', error);
-                    alert('Errore nel caricamento del template');
+                    alert('Errore nel caricamento del template: ' + error.message);
                 }
             }
 
