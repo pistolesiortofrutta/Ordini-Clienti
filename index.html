@@ -270,37 +270,42 @@
 
         .product-item {
             background: white;
-            padding: 15px;
+            padding: 18px 20px;
             margin-bottom: 15px;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            overflow: visible;
+            overflow: hidden;
+            width: 100%;
         }
 
         .product-name {
             font-weight: bold;
             color: #2c3e50;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             font-size: 1.1em;
             word-wrap: break-word;
             overflow-wrap: break-word;
             line-height: 1.4;
             max-width: 100%;
+            padding-right: 5px;
         }
 
         .product-inputs {
             display: flex;
             gap: 10px;
             align-items: center;
+            flex-wrap: wrap;
+            overflow: visible;
         }
 
         .product-inputs input[type="number"] {
-            flex: 1;
+            flex: 1 1 auto;
+            min-width: 80px;
+            max-width: 150px;
             padding: 12px;
             border: 2px solid #ddd;
             border-radius: 8px;
             font-size: 16px;
-            min-width: 80px;
         }
 
         /* Toggle Switch per Unità di Misura */
@@ -308,21 +313,27 @@
             display: flex;
             background: #e9ecef;
             border-radius: 8px;
-            padding: 4px;
-            flex: 2;
+            padding: 3px;
+            flex: 1 1 auto;
+            min-width: 140px;
+            max-width: 250px;
+            gap: 2px;
         }
 
         .unit-option {
             flex: 1;
-            padding: 10px 8px;
+            padding: 8px 6px;
             text-align: center;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s;
             font-weight: 600;
-            font-size: 0.9em;
+            font-size: 0.85em;
             color: #666;
             user-select: none;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .unit-option:hover {
@@ -509,15 +520,24 @@
 
             .product-inputs input[type="number"] {
                 width: 100%;
+                max-width: none;
             }
 
             .unit-toggle {
                 width: 100%;
+                max-width: none;
+                min-width: unset;
+                padding: 4px;
+                gap: 3px;
             }
 
             .unit-option {
-                font-size: 0.85em;
-                padding: 10px 5px;
+                font-size: 0.9em;
+                padding: 12px 8px;
+            }
+            
+            .product-item {
+                padding: 15px 18px;
             }
 
             .buttons {
