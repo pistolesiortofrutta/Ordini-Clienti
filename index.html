@@ -1876,19 +1876,31 @@
                 }
                 
                 try {
+                    console.log('🔍 Cercando ultimo ordine per cliente:', currentClienteId);
+                    
                     // Trova l'ultimo ordine
-                    const { data: lastOrder, error: orderError } = await supabase
+                    const { data: orders, error: orderError } = await supabase
                         .from('ordini')
                         .select('id, created_at, data_consegna')
                         .eq('cliente_id', currentClienteId)
                         .order('created_at', { ascending: false })
-                        .limit(1)
-                        .single();
+                        .limit(1);
+                    
+                    console.log('📦 Ordini trovati:', orders);
                     
                     if (orderError) {
+                        console.error('❌ Errore query:', orderError);
+                        alert('Errore nella ricerca ordini: ' + orderError.message);
+                        return;
+                    }
+                    
+                    if (!orders || orders.length === 0) {
                         alert('Nessun ordine precedente trovato');
                         return;
                     }
+                    
+                    const lastOrder = orders[0];
+                    console.log('✅ Ultimo ordine:', lastOrder);
                     
                     // Carica i dettagli
                     const { data: details, error: detailsError } = await supabase
@@ -1896,7 +1908,14 @@
                         .select('*')
                         .eq('ordine_id', lastOrder.id);
                     
+                    console.log('📝 Dettagli ordine:', details);
+                    
                     if (detailsError) throw detailsError;
+                    
+                    if (!details || details.length === 0) {
+                        alert('Ordine trovato ma senza prodotti');
+                        return;
+                    }
                     
                     // Carica info prodotti per ogni dettaglio
                     for (const detail of details) {
@@ -1920,7 +1939,7 @@
                     alert(`✅ Caricato ultimo ordine del ${new Date(lastOrder.created_at).toLocaleDateString('it-IT')}`);
                     
                 } catch (error) {
-                    console.error('Errore caricamento ordine:', error);
+                    console.error('❌ Errore caricamento ordine:', error);
                     alert('Errore nel caricamento dell\'ultimo ordine: ' + error.message);
                 }
             }
@@ -1958,10 +1977,17 @@
                                 .eq('template_id', template.id);
                             
                             html += `
-                                <div class="template-item" onclick="loadTemplate('${template.id}')">
-                                    <div class="template-name">${template.nome_template}</div>
-                                    ${template.descrizione ? `<div class="template-description">${template.descrizione}</div>` : ''}
-                                    <div class="template-products">${count || 0} prodotti</div>
+                                <div class="template-item" style="display: flex; justify-content: space-between; align-items: center; position: relative;">
+                                    <div onclick="loadTemplate('${template.id}')" style="flex: 1; cursor: pointer;">
+                                        <div class="template-name">${template.nome_template}</div>
+                                        ${template.descrizione ? `<div class="template-description">${template.descrizione}</div>` : ''}
+                                        <div class="template-products">${count || 0} prodotti</div>
+                                    </div>
+                                    <button onclick="event.stopPropagation(); deleteTemplate('${template.id}', '${template.nome_template.replace(/'/g, "\\'")}')" 
+                                            style="background: #e74c3c; color: white; border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer; font-weight: bold; margin-left: 10px;"
+                                            title="Elimina template">
+                                        🗑️
+                                    </button>
                                 </div>
                             `;
                         }
@@ -1972,6 +1998,39 @@
                 } catch (error) {
                     console.error('Errore caricamento template:', error);
                     alert('Errore nel caricamento dei template');
+                }
+            }
+
+            window.deleteTemplate = async function(templateId, templateName) {
+                if (!confirm(`Vuoi eliminare il template "${templateName}"?\n\nQuesta azione è irreversibile!`)) {
+                    return;
+                }
+                
+                try {
+                    // Elimina prima i dettagli
+                    const { error: detailsError } = await supabase
+                        .from('template_dettagli')
+                        .delete()
+                        .eq('template_id', templateId);
+                    
+                    if (detailsError) throw detailsError;
+                    
+                    // Poi elimina il template
+                    const { error: templateError } = await supabase
+                        .from('template_ordini')
+                        .delete()
+                        .eq('id', templateId);
+                    
+                    if (templateError) throw templateError;
+                    
+                    alert('✅ Template eliminato!');
+                    
+                    // Ricarica la lista
+                    showTemplates();
+                    
+                } catch (error) {
+                    console.error('Errore eliminazione template:', error);
+                    alert('Errore nell\'eliminazione del template: ' + error.message);
                 }
             }
 
@@ -2063,6 +2122,7 @@
                     // Salva dettagli
                     const dettagli = currentOrderItems.map(item => ({
                         template_id: template.id,
+                        prodotto_id: item.productId,
                         prodotto_nome: item.productName,
                         categoria_nome: item.categoryName,
                         quantita: item.quantity,
