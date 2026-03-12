@@ -852,8 +852,8 @@
 
     <div class="container">
         <div class="header">
-            <h1>🍎 Ordini Frutta e Verdura</h1>
-            <p>Seleziona i prodotti e invia il tuo ordine</p>
+            <h1>🐍🍎 Pistolesi Ortofrutta SRL</h1>
+            <p>Ordini Frutta e Verdura - Seleziona i prodotti e invia il tuo ordine</p>
         </div>
 
         <div class="content">
@@ -865,7 +865,7 @@
             <!-- Login Screen -->
             <div class="login-screen" id="loginScreen" style="display: none;">
                 <div class="login-card">
-                    <h2>🍎 Accesso Clienti</h2>
+                    <h2>🐍🍎 Pistolesi Ortofrutta - Accesso Clienti</h2>
                     <p style="color: #666; margin-bottom: 30px;">Seleziona la tua ragione sociale</p>
                     
                     <div class="form-group">
@@ -951,6 +951,7 @@
                     
                     <div class="buttons">
                         <button class="btn btn-send" onclick="sendOrder()">📤 INVIA ORDINE</button>
+                        <button class="btn btn-primary" onclick="stampaOrdineCliente()">🖨️ STAMPA ORDINE</button>
                         <button class="btn btn-success" onclick="saveAsTemplate()">💾 Salva come Template</button>
                         <button class="btn btn-secondary" onclick="editOrder()">✏️ Modifica Ordine</button>
                         <button class="btn btn-secondary" onclick="resetOrder()">🔄 Nuovo Ordine</button>
@@ -1866,6 +1867,160 @@
             }
 
             // ============================================
+            // STAMPA ORDINE (layout admin)
+            // ============================================
+            
+            window.stampaOrdineCliente = function() {
+                if (!currentOrderItems || currentOrderItems.length === 0) {
+                    alert('Genera prima il riepilogo ordine');
+                    return;
+                }
+                
+                const deliveryDate = document.getElementById('deliveryDate').value;
+                const notes = document.getElementById('orderNotes').value.trim();
+                
+                // Raggruppa per categoria
+                const grouped = {};
+                currentOrderItems.forEach(item => {
+                    if (!grouped[item.categoryName]) {
+                        grouped[item.categoryName] = [];
+                    }
+                    grouped[item.categoryName].push(item);
+                });
+                
+                let html = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Ordine ${currentClienteName || 'Cliente'}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 30px;
+            font-size: 14pt;
+        }
+        h1 { 
+            text-align: center; 
+            border-bottom: 4px solid #2ecc71; 
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            font-size: 28pt;
+        }
+        .info-box {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 5px solid #2ecc71;
+        }
+        .info-box p {
+            margin: 5px 0;
+            font-size: 14pt;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 30px 0;
+        }
+        th { 
+            background: #2ecc71; 
+            color: white;
+            padding: 15px; 
+            border: 2px solid #000;
+            font-size: 14pt;
+            text-align: left;
+        }
+        td { 
+            padding: 12px; 
+            border: 2px solid #000;
+            font-size: 13pt;
+        }
+        .categoria { 
+            font-weight: bold; 
+            background: #e8f5e9;
+            font-size: 14pt;
+            vertical-align: top;
+        }
+        .qty {
+            text-align: center;
+            font-weight: bold;
+            font-size: 15pt;
+        }
+        .checkbox {
+            width: 40px;
+            background: #f0f0f0;
+        }
+        .note-box {
+            margin-top: 30px;
+            padding: 15px;
+            border: 2px solid #000;
+            background: #fff9e6;
+        }
+        @media print {
+            body { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <h1>🐍🍎 ORDINE PISTOLESI ORTOFRUTTA</h1>
+    
+    <div class="info-box">
+        <p><strong>Cliente:</strong> ${currentClienteName || 'N/A'}</p>
+        <p><strong>Telefono:</strong> ${currentClienteTelefono || 'N/A'}</p>
+        <p><strong>Data Consegna:</strong> ${deliveryDate ? new Date(deliveryDate).toLocaleDateString('it-IT') : 'N/A'}</p>
+        <p><strong>Data Ordine:</strong> ${new Date().toLocaleDateString('it-IT')}</p>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 20%;">Categoria</th>
+                <th style="width: 40%;">Prodotto</th>
+                <th style="width: 15%; text-align: center;">Quantità</th>
+                <th style="width: 15%; text-align: center;">Unità</th>
+                <th style="width: 10%; text-align: center;">✓</th>
+            </tr>
+        </thead>
+        <tbody>`;
+                
+                for (const [cat, prods] of Object.entries(grouped)) {
+                    prods.forEach((p, i) => {
+                        html += '<tr>';
+                        if (i === 0) {
+                            html += `<td class="categoria" rowspan="${prods.length}">${cat}</td>`;
+                        }
+                        html += `
+                            <td>${p.productName}</td>
+                            <td class="qty">${p.quantity}</td>
+                            <td style="text-align: center;">${p.unit}</td>
+                            <td class="checkbox"></td>
+                        </tr>`;
+                    });
+                }
+                
+                html += `
+        </tbody>
+    </table>`;
+                
+                if (notes) {
+                    html += `<div class="note-box"><strong>📝 NOTE:</strong><br>${notes.replace(/\n/g, '<br>')}</div>`;
+                }
+                
+                html += `
+    <scr` + `ipt>
+        window.onload = function() {
+            window.print();
+        }
+    </scr` + `ipt>
+</body>
+</html>`;
+                
+                const printWindow = window.open('', '_blank', 'width=900,height=700');
+                printWindow.document.write(html);
+                printWindow.document.close();
+            }
+
+            // ============================================
             // RIPETI ULTIMO ORDINE
             // ============================================
             
@@ -1881,7 +2036,7 @@
                     // Trova l'ultimo ordine
                     const { data: orders, error: orderError } = await supabase
                         .from('ordini')
-                        .select('id, created_at, data_consegna')
+                        .select('id, created_at')
                         .eq('cliente_id', currentClienteId)
                         .order('created_at', { ascending: false })
                         .limit(1);
@@ -2088,9 +2243,36 @@
                     return;
                 }
                 
+                // Se currentOrderItems è vuoto, prova a raccoglierli dai campi
                 if (!currentOrderItems || currentOrderItems.length === 0) {
-                    alert('Nessun prodotto nell\'ordine da salvare');
-                    return;
+                    // Raccogli ordini dai campi input
+                    const orderItems = [];
+                    document.querySelectorAll('input[type="number"][data-product-id]').forEach(input => {
+                        const qty = parseFloat(input.value);
+                        if (qty && qty > 0) {
+                            const productId = input.dataset.productId;
+                            const productName = input.dataset.productName;
+                            const categoryName = input.dataset.categoryName;
+                            const unit = getSelectedUnit(productId);
+                            
+                            if (unit) {
+                                orderItems.push({
+                                    productId,
+                                    productName,
+                                    categoryName,
+                                    quantity: qty,
+                                    unit
+                                });
+                            }
+                        }
+                    });
+                    
+                    if (orderItems.length === 0) {
+                        alert('Nessun prodotto nell\'ordine da salvare.\n\nInserisci almeno un prodotto con quantità prima di salvare il template.');
+                        return;
+                    }
+                    
+                    currentOrderItems = orderItems;
                 }
                 
                 document.getElementById('saveTemplateModal').classList.add('active');
@@ -2104,6 +2286,8 @@
                     alert('Inserisci un nome per il template');
                     return;
                 }
+                
+                console.log('💾 Salvando template con items:', currentOrderItems);
                 
                 try {
                     // Crea template
@@ -2119,6 +2303,8 @@
                     
                     if (templateError) throw templateError;
                     
+                    console.log('✅ Template creato:', template);
+                    
                     // Salva dettagli
                     const dettagli = currentOrderItems.map(item => ({
                         template_id: template.id,
@@ -2128,6 +2314,8 @@
                         quantita: item.quantity,
                         unita: item.unit
                     }));
+                    
+                    console.log('📦 Salvando dettagli:', dettagli);
                     
                     const { error: detailsError } = await supabase
                         .from('template_dettagli')
@@ -2263,6 +2451,98 @@
             });
             
             console.log('✅ Script caricato correttamente');
+            
+            // ============================================
+            // DEBUG FUNCTIONS (apri console e digita debugTemplate() o debugOrders())
+            // ============================================
+            window.debugTemplate = async function() {
+                try {
+                    const { data, error } = await supabase
+                        .from('template_dettagli')
+                        .select('*');
+                    
+                    if (error) {
+                        console.error('❌ Errore:', error);
+                        return;
+                    }
+                    
+                    console.log('📋 TEMPLATE_DETTAGLI - Totale righe:', data.length);
+                    console.table(data);
+                    
+                    // Verifica prodotto_id
+                    const conProdottoId = data.filter(d => d.prodotto_id).length;
+                    const senzaProdottoId = data.filter(d => !d.prodotto_id).length;
+                    
+                    console.log(`✅ Con prodotto_id: ${conProdottoId}`);
+                    console.log(`❌ Senza prodotto_id: ${senzaProdottoId}`);
+                    
+                } catch (err) {
+                    console.error('Errore debug:', err);
+                }
+            }
+            
+            window.debugOrders = async function() {
+                if (!currentClienteId) {
+                    console.error('❌ Cliente non loggato');
+                    return;
+                }
+                
+                try {
+                    const { data, error } = await supabase
+                        .from('ordini')
+                        .select('*')
+                        .eq('cliente_id', currentClienteId)
+                        .order('created_at', { ascending: false })
+                        .limit(5);
+                    
+                    if (error) {
+                        console.error('❌ Errore:', error);
+                        return;
+                    }
+                    
+                    console.log('📦 ORDINI - Totale trovati:', data.length);
+                    console.table(data);
+                    
+                    if (data.length > 0) {
+                        // Mostra dettagli primo ordine
+                        const { data: dettagli } = await supabase
+                            .from('ordini_dettagli')
+                            .select('*')
+                            .eq('ordine_id', data[0].id);
+                        
+                        console.log('📝 DETTAGLI ULTIMO ORDINE:');
+                        console.table(dettagli);
+                    }
+                    
+                } catch (err) {
+                    console.error('Errore debug:', err);
+                }
+            }
+            
+            window.debugProducts = async function() {
+                try {
+                    const { data, error } = await supabase
+                        .from('prodotti')
+                        .select('id, nome, attivo')
+                        .limit(20);
+                    
+                    if (error) {
+                        console.error('❌ Errore:', error);
+                        return;
+                    }
+                    
+                    console.log('🥬 PRODOTTI - Campione primi 20:');
+                    console.table(data);
+                    
+                } catch (err) {
+                    console.error('Errore debug:', err);
+                }
+            }
+            
+            console.log('🔍 DEBUG FUNCTIONS AVAILABLE:');
+            console.log('  - debugTemplate()  → Mostra template_dettagli');
+            console.log('  - debugOrders()    → Mostra ordini cliente');
+            console.log('  - debugProducts()  → Mostra prodotti');
         })();
     </script>
 
