@@ -250,6 +250,73 @@
             box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
         }
 
+        /* Header fisso categoria aperta */
+        .category-sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            padding: 15px 25px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+
+        .category-sticky-header.active {
+            display: flex;
+        }
+
+        .category-sticky-header:hover {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        }
+
+        .category-sticky-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .category-sticky-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            font-size: 1.1em;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .category-sticky-close:hover {
+            background: white;
+            color: #27ae60;
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            .category-sticky-header {
+                padding: 12px 15px;
+            }
+            
+            .category-sticky-title {
+                font-size: 1.1em;
+            }
+            
+            .category-sticky-close {
+                padding: 6px 15px;
+                font-size: 1em;
+            }
+        }
+
         .category-header {
             padding: 20px;
             text-align: center;
@@ -931,6 +998,16 @@
 
                 <!-- Categorie -->
                 <h2 style="margin-bottom: 20px; color: #2c3e50;">Categorie Prodotti</h2>
+                
+                <!-- Header fisso categoria aperta -->
+                <div class="category-sticky-header" id="categoryStickyHeader" onclick="closeCategoryFromHeader()">
+                    <div class="category-sticky-title">
+                        <span id="stickyHeaderIcon"></span>
+                        <span id="stickyHeaderName"></span>
+                    </div>
+                    <div class="category-sticky-close">✖ CHIUDI</div>
+                </div>
+                
                 <div class="categories" id="categoriesContainer"></div>
 
                 <!-- Note Aggiuntive -->
@@ -1330,6 +1407,30 @@
                 productsDiv.classList.toggle('active');
                 
                 activeCategory = card.classList.contains('active') ? categoryId : null;
+                
+                // Gestisci header fisso
+                const stickyHeader = document.getElementById('categoryStickyHeader');
+                if (card.classList.contains('active')) {
+                    // Categoria aperta - mostra header fisso
+                    const category = categories.find(c => c.id === categoryId);
+                    if (category) {
+                        document.getElementById('stickyHeaderIcon').textContent = category.icona || '📦';
+                        document.getElementById('stickyHeaderName').textContent = category.nome;
+                        stickyHeader.classList.add('active');
+                        stickyHeader.setAttribute('data-category-id', categoryId);
+                    }
+                } else {
+                    // Categoria chiusa - nascondi header fisso
+                    stickyHeader.classList.remove('active');
+                }
+            }
+            
+            window.closeCategoryFromHeader = function() {
+                const stickyHeader = document.getElementById('categoryStickyHeader');
+                const categoryId = stickyHeader.getAttribute('data-category-id');
+                if (categoryId) {
+                    toggleCategory(categoryId);
+                }
             }
 
             window.selectUnit = function(event, productId, unit) {
