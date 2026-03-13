@@ -1613,6 +1613,7 @@
 
                     const dettagli = orderItems.map(item => ({
                         ordine_id: order.id,
+                        prodotto_id: item.productId,
                         prodotto_nome: item.productName,
                         categoria_nome: item.categoryName,
                         quantita: item.quantity,
