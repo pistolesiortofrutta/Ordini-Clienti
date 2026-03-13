@@ -252,9 +252,11 @@
 
         /* Header fisso categoria aperta */
         .category-sticky-header {
-            position: sticky;
+            position: fixed;
             top: 0;
-            z-index: 100;
+            left: 0;
+            right: 0;
+            z-index: 1000;
             background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
             color: white;
             padding: 15px 25px;
@@ -264,8 +266,6 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             cursor: pointer;
             transition: all 0.3s;
-            margin-bottom: 20px;
-            border-radius: 10px;
         }
 
         .category-sticky-header.active {
@@ -302,6 +302,11 @@
             transform: scale(1.05);
         }
 
+        /* Padding top quando header è attivo per evitare sovrapposizione */
+        body.category-open {
+            padding-top: 70px;
+        }
+
         @media (max-width: 768px) {
             .category-sticky-header {
                 padding: 12px 15px;
@@ -314,6 +319,10 @@
             .category-sticky-close {
                 padding: 6px 15px;
                 font-size: 1em;
+            }
+            
+            body.category-open {
+                padding-top: 60px;
             }
         }
 
@@ -1418,10 +1427,17 @@
                         document.getElementById('stickyHeaderName').textContent = category.nome;
                         stickyHeader.classList.add('active');
                         stickyHeader.setAttribute('data-category-id', categoryId);
+                        document.body.classList.add('category-open');
+                        
+                        // Scroll smooth all'inizio della categoria dopo un attimo
+                        setTimeout(() => {
+                            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }, 100);
                     }
                 } else {
                     // Categoria chiusa - nascondi header fisso
                     stickyHeader.classList.remove('active');
+                    document.body.classList.remove('category-open');
                 }
             }
             
@@ -1430,6 +1446,8 @@
                 const categoryId = stickyHeader.getAttribute('data-category-id');
                 if (categoryId) {
                     toggleCategory(categoryId);
+                    // Scroll alla lista categorie
+                    document.querySelector('.categories').scrollIntoView({ behavior: 'smooth' });
                 }
             }
 
