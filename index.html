@@ -232,6 +232,113 @@
             margin-bottom: 30px;
         }
 
+        /* Layout Desktop a 2 Colonne */
+        @media (min-width: 1024px) {
+            .categories-wrapper {
+                display: flex;
+                gap: 30px;
+                align-items: flex-start;
+            }
+
+            .categories-sidebar {
+                flex: 0 0 280px;
+                position: sticky;
+                top: 20px;
+                max-height: calc(100vh - 40px);
+                overflow-y: auto;
+                background: #f8f9fa;
+                border-radius: 15px;
+                padding: 20px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            }
+
+            .categories-sidebar h3 {
+                color: #2c3e50;
+                margin-bottom: 15px;
+                font-size: 1.2em;
+                padding-bottom: 10px;
+                border-bottom: 3px solid #2ecc71;
+            }
+
+            .categories-products-area {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .categories {
+                display: flex;
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .category-card {
+                border: none;
+                border-radius: 0;
+                margin-bottom: 0;
+            }
+
+            .category-header {
+                display: none; /* Nasconde header categorie in modalità desktop */
+            }
+
+            .products {
+                display: none;
+                padding: 0;
+                background: transparent;
+            }
+
+            .products.active {
+                display: block;
+            }
+
+            /* Sidebar category items */
+            .sidebar-category-item {
+                padding: 15px 18px;
+                margin-bottom: 10px;
+                border-radius: 10px;
+                cursor: pointer;
+                transition: all 0.3s;
+                border: 2px solid transparent;
+                background: white;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-weight: 500;
+                color: #2c3e50;
+            }
+
+            .sidebar-category-item:hover {
+                background: #e8f5e9;
+                border-color: #2ecc71;
+                transform: translateX(5px);
+            }
+
+            .sidebar-category-item.active {
+                background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+                color: white;
+                border-color: #27ae60;
+                box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+            }
+
+            .sidebar-category-icon {
+                font-size: 1.5em;
+            }
+
+            .sidebar-category-name {
+                flex: 1;
+                font-size: 1.05em;
+            }
+
+            /* Nascondi header fisso su desktop */
+            .category-sticky-header {
+                display: none !important;
+            }
+
+            body.category-open {
+                padding-top: 0;
+            }
+        }
+
         .category-card {
             border: 2px solid #e0e0e0;
             border-radius: 12px;
@@ -1008,7 +1115,7 @@
                 <!-- Categorie -->
                 <h2 style="margin-bottom: 20px; color: #2c3e50;">Categorie Prodotti</h2>
                 
-                <!-- Header fisso categoria aperta -->
+                <!-- Header fisso categoria aperta (solo mobile) -->
                 <div class="category-sticky-header" id="categoryStickyHeader" onclick="closeCategoryFromHeader()">
                     <div class="category-sticky-title">
                         <span id="stickyHeaderIcon"></span>
@@ -1017,7 +1124,19 @@
                     <div class="category-sticky-close">✖ CHIUDI</div>
                 </div>
                 
-                <div class="categories" id="categoriesContainer"></div>
+                <!-- Wrapper per layout 2 colonne desktop -->
+                <div class="categories-wrapper">
+                    <!-- Sidebar categorie (solo desktop) -->
+                    <div class="categories-sidebar" id="categoriesSidebar">
+                        <h3>📂 Categorie</h3>
+                        <div id="sidebarCategoriesList"></div>
+                    </div>
+                    
+                    <!-- Area prodotti -->
+                    <div class="categories-products-area">
+                        <div class="categories" id="categoriesContainer"></div>
+                    </div>
+                </div>
 
                 <!-- Note Aggiuntive -->
                 <div class="notes-section">
@@ -1397,6 +1516,30 @@
 
                     container.appendChild(categoryCard);
                 });
+                
+                // Popola anche la sidebar desktop
+                renderSidebarCategories();
+            }
+            
+            function renderSidebarCategories() {
+                const sidebarList = document.getElementById('sidebarCategoriesList');
+                if (!sidebarList) return;
+                
+                sidebarList.innerHTML = '';
+                
+                categoriesData.forEach(category => {
+                    const sidebarItem = document.createElement('div');
+                    sidebarItem.className = 'sidebar-category-item';
+                    sidebarItem.setAttribute('data-category-id', category.id);
+                    sidebarItem.onclick = () => toggleCategory(category.id);
+                    
+                    sidebarItem.innerHTML = `
+                        <span class="sidebar-category-icon">${category.icona}</span>
+                        <span class="sidebar-category-name">${category.nome}</span>
+                    `;
+                    
+                    sidebarList.appendChild(sidebarItem);
+                });
             }
 
             window.toggleCategory = function(categoryId) {
@@ -1408,6 +1551,11 @@
                     }
                 });
 
+                // Rimuovi active da tutti gli item sidebar
+                document.querySelectorAll('.sidebar-category-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+
                 // Toggle la categoria cliccata
                 const productsDiv = document.getElementById('products-' + categoryId);
                 const card = productsDiv.parentElement;
@@ -1417,7 +1565,15 @@
                 
                 activeCategory = card.classList.contains('active') ? categoryId : null;
                 
-                // Gestisci header fisso
+                // Gestisci item sidebar active
+                if (card.classList.contains('active')) {
+                    const sidebarItem = document.querySelector(`.sidebar-category-item[data-category-id="${categoryId}"]`);
+                    if (sidebarItem) {
+                        sidebarItem.classList.add('active');
+                    }
+                }
+                
+                // Gestisci header fisso (solo mobile)
                 const stickyHeader = document.getElementById('categoryStickyHeader');
                 if (card.classList.contains('active')) {
                     // Categoria aperta - mostra header fisso
@@ -1429,10 +1585,12 @@
                         stickyHeader.setAttribute('data-category-id', categoryId);
                         document.body.classList.add('category-open');
                         
-                        // Scroll smooth all'inizio della categoria dopo un attimo
-                        setTimeout(() => {
-                            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }, 100);
+                        // Scroll smooth all'inizio della categoria dopo un attimo (solo mobile)
+                        if (window.innerWidth < 1024) {
+                            setTimeout(() => {
+                                card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }, 100);
+                        }
                     }
                 } else {
                     // Categoria chiusa - nascondi header fisso
