@@ -1495,6 +1495,7 @@
                             missingUnits.push(item.productName);
                         } else {
                             orderItems.push({
+                                productId: item.productId,
                                 categoryName: item.categoryName,
                                 productName: item.productName,
                                 quantity: item.quantity,
@@ -2094,6 +2095,9 @@
                     
                     alert(`✅ Caricato ultimo ordine del ${new Date(lastOrder.created_at).toLocaleDateString('it-IT')}`);
                     
+                    // Genera automaticamente il riepilogo
+                    await generateSummary();
+                    
                 } catch (error) {
                     console.error('❌ Errore caricamento ordine:', error);
                     alert('Errore nel caricamento dell\'ultimo ordine: ' + error.message);
@@ -2228,6 +2232,9 @@
                     } else {
                         alert('✅ Template caricato! Modifica le quantità se necessario.');
                     }
+                    
+                    // Genera automaticamente il riepilogo
+                    await generateSummary();
                 } catch (error) {
                     console.error('Errore caricamento template:', error);
                     alert('Errore nel caricamento del template: ' + error.message);
