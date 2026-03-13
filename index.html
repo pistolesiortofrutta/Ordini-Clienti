@@ -1421,7 +1421,7 @@
                 const stickyHeader = document.getElementById('categoryStickyHeader');
                 if (card.classList.contains('active')) {
                     // Categoria aperta - mostra header fisso
-                    const category = categories.find(c => c.id === categoryId);
+                    const category = categoriesData.find(c => c.id === categoryId);
                     if (category) {
                         document.getElementById('stickyHeaderIcon').textContent = category.icona || '📦';
                         document.getElementById('stickyHeaderName').textContent = category.nome;
