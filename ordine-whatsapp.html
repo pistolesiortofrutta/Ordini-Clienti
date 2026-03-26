@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pistolesi Ortofrutta — Ordini WhatsApp</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --verde: #2d5a27;
+    --verde-chiaro: #4a8c42;
+    --verde-mint: #e8f5e3;
+    --arancio: #e07b2a;
+    --arancio-chiaro: #fdf0e3;
+    --crema: #faf8f3;
+    --testo: #1a1a1a;
+    --testo-light: #666;
+    --bordo: #d8e8d3;
+    --bianco: #ffffff;
+    --ombra: 0 4px 24px rgba(45,90,39,0.10);
+    --ombra-hover: 0 8px 32px rgba(45,90,39,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--crema);
+    color: var(--testo);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--verde);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+
+  header .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.15rem;
+    color: var(--bianco);
+    line-height: 1.2;
+  }
+
+  header .logo span {
+    display: block;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 300;
+    color: rgba(255,255,255,0.65);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  header .emoji {
+    font-size: 1.6rem;
+  }
+
+  /* MAIN */
+  main {
+    padding: 20px 16px 40px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--bianco);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: var(--ombra);
+    margin-bottom: 16px;
+    border: 1px solid var(--bordo);
+  }
+
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1rem;
+    color: var(--verde);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title .num {
+    background: var(--verde);
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+  }
+
+  /* INPUT */
+  label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--testo-light);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+
+  input[type="text"], input[type="password"], textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--bordo);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    color: var(--testo);
+    background: var(--crema);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+  }
+
+  input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
+    outline: none;
+    border-color: var(--verde-chiaro);
+    box-shadow: 0 0 0 3px rgba(74,140,66,0.12);
+    background: var(--bianco);
+  }
+
+  textarea {
+    min-height: 120px;
+    resize: vertical;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  /* API KEY */
+  .api-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .api-row input {
+    flex: 1;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+  }
+
+  .btn-toggle {
+    padding: 12px 14px;
+    background: var(--verde-mint);
+    border: 1.5px solid var(--bordo);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+
+  .btn-toggle:active { background: var(--bordo); }
+
+  .api-hint {
+    font-size: 0.72rem;
+    color: var(--testo-light);
+    margin-top: 6px;
+    line-height: 1.4;
+  }
+
+  /* BUTTON PRINCIPALE */
+  .btn-elabora {
+    width: 100%;
+    padding: 16px;
+    background: var(--verde);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    box-shadow: var(--ombra);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    letter-spacing: 0.01em;
+  }
+
+  .btn-elabora:active {
+    transform: scale(0.98);
+    background: var(--verde-chiaro);
+  }
+
+  .btn-elabora:disabled {
+    background: #aaa;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* LOADING */
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 24px;
+    color: var(--verde);
+  }
+
+  .loading.visible { display: block; }
+
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--verde-mint);
+    border-top-color: var(--verde);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading p {
+    font-size: 0.85rem;
+    color: var(--testo-light);
+  }
+
+  /* RISULTATO */
+  .risultato {
+    display: none;
+  }
+
+  .risultato.visible { display: block; }
+
+  .risultato-testo {
+    background: var(--verde-mint);
+    border: 1.5px solid var(--bordo);
+    border-radius: 10px;
+    padding: 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    color: var(--testo);
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin-bottom: 14px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .btn-gmail {
+    width: 100%;
+    padding: 16px;
+    background: var(--arancio);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .btn-gmail:active {
+    transform: scale(0.98);
+    background: #c96a1a;
+  }
+
+  .btn-reset {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    color: var(--testo-light);
+    border: 1.5px solid var(--bordo);
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-reset:active { background: var(--bordo); }
+
+  /* ERRORE */
+  .errore {
+    display: none;
+    background: #fff0f0;
+    border: 1.5px solid #ffcccc;
+    border-radius: 10px;
+    padding: 14px;
+    color: #c0392b;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin-top: 12px;
+  }
+
+  .errore.visible { display: block; }
+
+  /* MAIL DEST */
+  .mail-dest {
+    margin-top: 12px;
+  }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: var(--bordo);
+    margin: 14px 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="emoji">🍎</div>
+  <div class="logo">
+    Pistolesi Ortofrutta
+    <span>Gestione Ordini WhatsApp</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- STEP 1: Configurazione -->
+  <div class="card" id="card-config">
+    <div class="card-title">
+      <div class="num">⚙</div>
+      Configurazione
+    </div>
+
+    <label>API Key Anthropic</label>
+    <div class="api-row">
+      <input type="password" id="apiKey" placeholder="sk-ant-api03-..." autocomplete="off">
+      <button class="btn-toggle" onclick="toggleApiKey()" id="btnToggle">👁</button>
+    </div>
+    <p class="api-hint">La chiave viene salvata sul dispositivo e non viene condivisa.</p>
+
+    <div class="divider"></div>
+
+    <label>Mail destinatario</label>
+    <input type="text" id="mailDest" placeholder="tuamail@azienda.it">
+  </div>
+
+  <!-- STEP 2: Ordine -->
+  <div class="card">
+    <div class="card-title">
+      <div class="num">1</div>
+      Incolla il messaggio WhatsApp
+    </div>
+    <textarea id="testoOrdine" placeholder="Es: ciao! mi servono 2kg pomodori, 1 lattuga, 3 mele, consegna giovedì mattina..."></textarea>
+  </div>
+
+  <!-- STEP 3: Cliente -->
+  <div class="card">
+    <div class="card-title">
+      <div class="num">2</div>
+      Nome del cliente
+    </div>
+    <input type="text" id="nomeCliente" placeholder="Es: Ristorante Napoli">
+  </div>
+
+  <!-- BOTTONE ELABORA -->
+  <button class="btn-elabora" onclick="elaboraOrdine()" id="btnElabora">
+    ✨ Elabora Ordine
+  </button>
+
+  <!-- LOADING -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p>Claude sta elaborando l'ordine…</p>
+  </div>
+
+  <!-- ERRORE -->
+  <div class="errore" id="errore"></div>
+
+  <!-- RISULTATO -->
+  <div class="risultato" id="risultato">
+    <div class="card">
+      <div class="card-title">
+        <div class="num">✓</div>
+        Ordine elaborato
+      </div>
+      <div class="risultato-testo" id="risultatoTesto"></div>
+      <button class="btn-gmail" onclick="apriGmail()">
+        📧 Apri in Gmail e Invia
+      </button>
+      <button class="btn-reset" onclick="reset()">
+        ↩ Nuovo ordine
+      </button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // Carica dati salvati
+  window.addEventListener('load', () => {
+    const savedKey = localStorage.getItem('pistolesi_apikey');
+    const savedMail = localStorage.getItem('pistolesi_mail');
+    if (savedKey) document.getElementById('apiKey').value = savedKey;
+    if (savedMail) document.getElementById('mailDest').value = savedMail;
+  });
+
+  function toggleApiKey() {
+    const input = document.getElementById('apiKey');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+
+  function oggi() {
+    const d = new Date();
+    return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  }
+
+  async function elaboraOrdine() {
+    const apiKey = document.getElementById('apiKey').value.trim();
+    const mailDest = document.getElementById('mailDest').value.trim();
+    const testo = document.getElementById('testoOrdine').value.trim();
+    const cliente = document.getElementById('nomeCliente').value.trim();
+
+    // Validazione
+    if (!apiKey) return mostraErrore('Inserisci la API Key Anthropic.');
+    if (!mailDest) return mostraErrore('Inserisci la mail destinatario.');
+    if (!testo) return mostraErrore('Incolla il messaggio WhatsApp.');
+    if (!cliente) return mostraErrore('Inserisci il nome del cliente.');
+
+    // Salva in locale
+    localStorage.setItem('pistolesi_apikey', apiKey);
+    localStorage.setItem('pistolesi_mail', mailDest);
+
+    // UI loading
+    document.getElementById('btnElabora').disabled = true;
+    document.getElementById('loading').classList.add('visible');
+    document.getElementById('errore').classList.remove('visible');
+    document.getElementById('risultato').classList.remove('visible');
+
+    const prompt = `Sei un assistente per Pistolesi Ortofrutta.
+Ricevi un messaggio WhatsApp grezzo con un ordine di frutta e verdura.
+Riformattalo in modo ordinato con questo formato ESATTO:
+
+🍎 ORDINE PISTOLESI ORTOFRUTTA
+Cliente: ${cliente}
+Data Ordine: ${oggi()}
+[Data Consegna: ... solo se presente nel messaggio, altrimenti ometti questa riga]
+
+Categoria | Prodotto | Quantità | Unità
+-----------------------------------------
+[prodotti raggruppati per categoria]
+
+[📝 NOTE: ... solo se presenti nel messaggio, altrimenti ometti]
+
+Categorie disponibili in questo ordine:
+- FRUTTA
+- VERDURE
+- POMODORI
+- INSALATE
+- PATATE E CIPOLLE
+- IV GAMMA e AROMI
+- EXTRA
+
+Regole:
+- Assegna ogni prodotto alla categoria più appropriata
+- Se quantità non specificata scrivi q.b.
+- Se unità non specificata deducila dal contesto (Kg, Pezzi, Mazzi, Casse...)
+- Includi solo le categorie che hanno almeno un prodotto
+- Se trovi data o giorno di consegna, estraila e mettila in Data Consegna
+- Rispondi SOLO con il testo formattato, niente altro
+
+Messaggio WhatsApp da formattare:
+${testo}`;
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error?.message || `Errore API: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const ordineFormattato = data.content[0].text;
+
+      // Mostra risultato
+      document.getElementById('risultatoTesto').textContent = ordineFormattato;
+      document.getElementById('risultato').classList.add('visible');
+      document.getElementById('risultato').scrollIntoView({ behavior: 'smooth' });
+
+      // Salva per Gmail
+      window._ordineFormattato = ordineFormattato;
+      window._mailDest = mailDest;
+      window._cliente = cliente;
+
+    } catch (err) {
+      mostraErrore('Errore: ' + err.message);
+    } finally {
+      document.getElementById('loading').classList.remove('visible');
+      document.getElementById('btnElabora').disabled = false;
+    }
+  }
+
+  function apriGmail() {
+    const subject = encodeURIComponent(`Ordine - ${window._cliente} - ${oggi()}`);
+    const body = encodeURIComponent(window._ordineFormattato);
+    const to = encodeURIComponent(window._mailDest);
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&to=${to}&su=${subject}&body=${body}`;
+    window.open(gmailUrl, '_blank');
+  }
+
+  function mostraErrore(msg) {
+    const el = document.getElementById('errore');
+    el.textContent = msg;
+    el.classList.add('visible');
+  }
+
+  function reset() {
+    document.getElementById('testoOrdine').value = '';
+    document.getElementById('nomeCliente').value = '';
+    document.getElementById('risultato').classList.remove('visible');
+    document.getElementById('errore').classList.remove('visible');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+
+</body>
+</html>
