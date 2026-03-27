@@ -18,7 +18,6 @@
     --bordo: #d8e8d3;
     --bianco: #ffffff;
     --ombra: 0 4px 24px rgba(45,90,39,0.10);
-    --ombra-hover: 0 8px 32px rgba(45,90,39,0.18);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,10 +27,8 @@
     background: var(--crema);
     color: var(--testo);
     min-height: 100vh;
-    padding: 0;
   }
 
-  /* HEADER */
   header {
     background: var(--verde);
     padding: 18px 24px;
@@ -47,7 +44,7 @@
   header .logo {
     font-family: 'DM Serif Display', serif;
     font-size: 1.15rem;
-    color: var(--bianco);
+    color: white;
     line-height: 1.2;
   }
 
@@ -61,18 +58,14 @@
     text-transform: uppercase;
   }
 
-  header .emoji {
-    font-size: 1.6rem;
-  }
+  header .emoji { font-size: 1.6rem; }
 
-  /* MAIN */
   main {
     padding: 20px 16px 40px;
     max-width: 600px;
     margin: 0 auto;
   }
 
-  /* CARD */
   .card {
     background: var(--bianco);
     border-radius: 16px;
@@ -106,7 +99,6 @@
     flex-shrink: 0;
   }
 
-  /* INPUT */
   label {
     display: block;
     font-size: 0.75rem;
@@ -117,7 +109,7 @@
     margin-bottom: 6px;
   }
 
-  input[type="text"], input[type="password"], textarea {
+  input[type="text"], textarea {
     width: 100%;
     padding: 12px 14px;
     border: 1.5px solid var(--bordo);
@@ -130,7 +122,7 @@
     -webkit-appearance: none;
   }
 
-  input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
+  input[type="text"]:focus, textarea:focus {
     outline: none;
     border-color: var(--verde-chiaro);
     box-shadow: 0 0 0 3px rgba(74,140,66,0.12);
@@ -144,40 +136,12 @@
     line-height: 1.5;
   }
 
-  /* API KEY */
-  .api-row {
-    display: flex;
-    gap: 8px;
-    align-items: center;
+  .divider {
+    height: 1px;
+    background: var(--bordo);
+    margin: 14px 0;
   }
 
-  .api-row input {
-    flex: 1;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.78rem;
-  }
-
-  .btn-toggle {
-    padding: 12px 14px;
-    background: var(--verde-mint);
-    border: 1.5px solid var(--bordo);
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 1rem;
-    flex-shrink: 0;
-    transition: background 0.2s;
-  }
-
-  .btn-toggle:active { background: var(--bordo); }
-
-  .api-hint {
-    font-size: 0.72rem;
-    color: var(--testo-light);
-    margin-top: 6px;
-    line-height: 1.4;
-  }
-
-  /* BUTTON PRINCIPALE */
   .btn-elabora {
     width: 100%;
     padding: 16px;
@@ -189,34 +153,23 @@
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    transition: background 0.2s, transform 0.1s;
     box-shadow: var(--ombra);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    letter-spacing: 0.01em;
   }
 
-  .btn-elabora:active {
-    transform: scale(0.98);
-    background: var(--verde-chiaro);
-  }
+  .btn-elabora:active { transform: scale(0.98); }
+  .btn-elabora:disabled { background: #aaa; cursor: not-allowed; transform: none; }
 
-  .btn-elabora:disabled {
-    background: #aaa;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  /* LOADING */
   .loading {
     display: none;
     text-align: center;
     padding: 24px;
     color: var(--verde);
   }
-
   .loading.visible { display: block; }
 
   .spinner {
@@ -228,19 +181,10 @@
     animation: spin 0.8s linear infinite;
     margin: 0 auto 12px;
   }
-
   @keyframes spin { to { transform: rotate(360deg); } }
+  .loading p { font-size: 0.85rem; color: var(--testo-light); }
 
-  .loading p {
-    font-size: 0.85rem;
-    color: var(--testo-light);
-  }
-
-  /* RISULTATO */
-  .risultato {
-    display: none;
-  }
-
+  .risultato { display: none; }
   .risultato.visible { display: block; }
 
   .risultato-testo {
@@ -251,7 +195,6 @@
     font-family: 'DM Mono', monospace;
     font-size: 0.82rem;
     line-height: 1.7;
-    color: var(--testo);
     white-space: pre-wrap;
     word-break: break-word;
     margin-bottom: 14px;
@@ -277,11 +220,7 @@
     gap: 8px;
     margin-bottom: 10px;
   }
-
-  .btn-gmail:active {
-    transform: scale(0.98);
-    background: #c96a1a;
-  }
+  .btn-gmail:active { transform: scale(0.98); }
 
   .btn-reset {
     width: 100%;
@@ -293,12 +232,8 @@
     font-family: 'DM Sans', sans-serif;
     font-size: 0.9rem;
     cursor: pointer;
-    transition: background 0.2s;
   }
 
-  .btn-reset:active { background: var(--bordo); }
-
-  /* ERRORE */
   .errore {
     display: none;
     background: #fff0f0;
@@ -310,20 +245,7 @@
     line-height: 1.5;
     margin-top: 12px;
   }
-
   .errore.visible { display: block; }
-
-  /* MAIL DEST */
-  .mail-dest {
-    margin-top: 12px;
-  }
-
-  /* DIVIDER */
-  .divider {
-    height: 1px;
-    background: var(--bordo);
-    margin: 14px 0;
-  }
 </style>
 </head>
 <body>
@@ -338,27 +260,17 @@
 
 <main>
 
-  <!-- STEP 1: Configurazione -->
-  <div class="card" id="card-config">
+  <!-- Configurazione mail -->
+  <div class="card">
     <div class="card-title">
       <div class="num">⚙</div>
       Configurazione
     </div>
-
-    <label>API Key Anthropic</label>
-    <div class="api-row">
-      <input type="password" id="apiKey" placeholder="sk-ant-api03-..." autocomplete="off">
-      <button class="btn-toggle" onclick="toggleApiKey()" id="btnToggle">👁</button>
-    </div>
-    <p class="api-hint">La chiave viene salvata sul dispositivo e non viene condivisa.</p>
-
-    <div class="divider"></div>
-
     <label>Mail destinatario</label>
     <input type="text" id="mailDest" placeholder="tuamail@azienda.it">
   </div>
 
-  <!-- STEP 2: Ordine -->
+  <!-- Testo ordine -->
   <div class="card">
     <div class="card-title">
       <div class="num">1</div>
@@ -367,7 +279,7 @@
     <textarea id="testoOrdine" placeholder="Es: ciao! mi servono 2kg pomodori, 1 lattuga, 3 mele, consegna giovedì mattina..."></textarea>
   </div>
 
-  <!-- STEP 3: Cliente -->
+  <!-- Nome cliente -->
   <div class="card">
     <div class="card-title">
       <div class="num">2</div>
@@ -376,21 +288,21 @@
     <input type="text" id="nomeCliente" placeholder="Es: Ristorante Napoli">
   </div>
 
-  <!-- BOTTONE ELABORA -->
+  <!-- Bottone -->
   <button class="btn-elabora" onclick="elaboraOrdine()" id="btnElabora">
     ✨ Elabora Ordine
   </button>
 
-  <!-- LOADING -->
+  <!-- Loading -->
   <div class="loading" id="loading">
     <div class="spinner"></div>
     <p>Claude sta elaborando l'ordine…</p>
   </div>
 
-  <!-- ERRORE -->
+  <!-- Errore -->
   <div class="errore" id="errore"></div>
 
-  <!-- RISULTATO -->
+  <!-- Risultato -->
   <div class="risultato" id="risultato">
     <div class="card">
       <div class="card-title">
@@ -410,18 +322,11 @@
 </main>
 
 <script>
-  // Carica dati salvati
+  // Carica mail salvata
   window.addEventListener('load', () => {
-    const savedKey = localStorage.getItem('pistolesi_apikey');
     const savedMail = localStorage.getItem('pistolesi_mail');
-    if (savedKey) document.getElementById('apiKey').value = savedKey;
     if (savedMail) document.getElementById('mailDest').value = savedMail;
   });
-
-  function toggleApiKey() {
-    const input = document.getElementById('apiKey');
-    input.type = input.type === 'password' ? 'text' : 'password';
-  }
 
   function oggi() {
     const d = new Date();
@@ -429,22 +334,16 @@
   }
 
   async function elaboraOrdine() {
-    const apiKey = document.getElementById('apiKey').value.trim();
     const mailDest = document.getElementById('mailDest').value.trim();
     const testo = document.getElementById('testoOrdine').value.trim();
     const cliente = document.getElementById('nomeCliente').value.trim();
 
-    // Validazione
-    if (!apiKey) return mostraErrore('Inserisci la API Key Anthropic.');
     if (!mailDest) return mostraErrore('Inserisci la mail destinatario.');
     if (!testo) return mostraErrore('Incolla il messaggio WhatsApp.');
     if (!cliente) return mostraErrore('Inserisci il nome del cliente.');
 
-    // Salva in locale
-    localStorage.setItem('pistolesi_apikey', apiKey);
     localStorage.setItem('pistolesi_mail', mailDest);
 
-    // UI loading
     document.getElementById('btnElabora').disabled = true;
     document.getElementById('loading').classList.add('visible');
     document.getElementById('errore').classList.remove('visible');
@@ -486,35 +385,24 @@ Messaggio WhatsApp da formattare:
 ${testo}`;
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch('/api/elabora', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 1000,
-          messages: [{ role: 'user', content: prompt }]
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
       });
 
       if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.error?.message || `Errore API: ${response.status}`);
+        throw new Error(err.error || `Errore: ${response.status}`);
       }
 
       const data = await response.json();
-      const ordineFormattato = data.content[0].text;
 
-      // Mostra risultato
-      document.getElementById('risultatoTesto').textContent = ordineFormattato;
+      document.getElementById('risultatoTesto').textContent = data.testo;
       document.getElementById('risultato').classList.add('visible');
       document.getElementById('risultato').scrollIntoView({ behavior: 'smooth' });
 
-      // Salva per Gmail
-      window._ordineFormattato = ordineFormattato;
+      window._ordineFormattato = data.testo;
       window._mailDest = mailDest;
       window._cliente = cliente;
 
@@ -530,8 +418,7 @@ ${testo}`;
     const subject = encodeURIComponent(`Ordine - ${window._cliente} - ${oggi()}`);
     const body = encodeURIComponent(window._ordineFormattato);
     const to = encodeURIComponent(window._mailDest);
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&to=${to}&su=${subject}&body=${body}`;
-    window.open(gmailUrl, '_blank');
+    window.open(`https://mail.google.com/mail/?view=cm&to=${to}&su=${subject}&body=${body}`, '_blank');
   }
 
   function mostraErrore(msg) {
