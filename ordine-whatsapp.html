@@ -351,33 +351,41 @@
 
     const prompt = `Sei un assistente per Pistolesi Ortofrutta.
 Ricevi un messaggio WhatsApp grezzo con un ordine di frutta e verdura.
-Riformattalo in modo ordinato con questo formato ESATTO:
+Riformattalo con questo formato ESATTO:
 
 🍎 ORDINE PISTOLESI ORTOFRUTTA
 Cliente: ${cliente}
 Data Ordine: ${oggi()}
 [Data Consegna: ... solo se presente nel messaggio, altrimenti ometti questa riga]
 
-Categoria | Prodotto | Quantità | Unità
------------------------------------------
-[prodotti raggruppati per categoria]
+Poi per ogni categoria presente, usa questo formato:
 
-[📝 NOTE: ... solo se presenti nel messaggio, altrimenti ometti]
+━━━━━━━━━━━━━━━━━━━━
+[EMOJI] [NOME CATEGORIA]
+━━━━━━━━━━━━━━━━━━━━
+• [Prodotto]               [Quantità] [Unità]
+• [Prodotto]               [Quantità] [Unità]
 
-Categorie disponibili in questo ordine:
-- FRUTTA
-- VERDURE
-- POMODORI
-- INSALATE
-- PATATE E CIPOLLE
-- IV GAMMA e AROMI
-- EXTRA
+Le categorie con le loro emoji sono:
+🍎 FRUTTA
+🥦 VERDURE
+🍅 POMODORI
+🥗 INSALATE
+🥔 PATATE E CIPOLLE
+🌿 IV GAMMA e AROMI
+📦 EXTRA
+
+Alla fine, se ci sono note nel messaggio:
+━━━━━━━━━━━━━━━━━━━━
+📝 NOTE
+━━━━━━━━━━━━━━━━━━━━
+[testo delle note]
 
 Regole:
+- Includi solo le categorie che hanno almeno un prodotto
 - Assegna ogni prodotto alla categoria più appropriata
 - Se quantità non specificata scrivi q.b.
 - Se unità non specificata deducila dal contesto (Kg, Pezzi, Mazzi, Casse...)
-- Includi solo le categorie che hanno almeno un prodotto
 - Se trovi data o giorno di consegna, estraila e mettila in Data Consegna
 - Rispondi SOLO con il testo formattato, niente altro
 
