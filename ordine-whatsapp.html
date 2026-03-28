@@ -358,15 +358,24 @@ Cliente: ${cliente}
 Data Ordine: ${oggi()}
 [Data Consegna: ... solo se presente nel messaggio, altrimenti ometti questa riga]
 
-Poi per ogni categoria presente, usa questo formato:
+REGOLA PRINCIPALE - Reparti del cliente:
+- Se nel messaggio ci sono sezioni/reparti indicati dal cliente (es. CUCINA, COLAZIONE, BAR, SALA, ecc.), mantienili come sezioni separate
+- Dentro ogni reparto del cliente, raggruppa i prodotti per categoria merceologica
+- Se non ci sono reparti, raggruppa direttamente per categoria merceologica
 
+Formato con reparti del cliente:
+🏢 [NOME REPARTO CLIENTE]
 ━━━━━━━━━━━━━━━━━━━━
-[EMOJI] [NOME CATEGORIA]
-━━━━━━━━━━━━━━━━━━━━
-• [Prodotto]               [Quantità] [Unità]
-• [Prodotto]               [Quantità] [Unità]
+[EMOJI CATEGORIA] [NOME CATEGORIA]
+• [Prodotto]          [Quantità] [Unità]
 
-Le categorie con le loro emoji sono:
+Formato senza reparti:
+━━━━━━━━━━━━━━━━━━━━
+[EMOJI CATEGORIA] [NOME CATEGORIA]
+━━━━━━━━━━━━━━━━━━━━
+• [Prodotto]          [Quantità] [Unità]
+
+Le categorie merceologiche con le loro emoji sono:
 🍎 FRUTTA
 🥦 VERDURE
 🍅 POMODORI
@@ -383,10 +392,12 @@ Alla fine, se ci sono note nel messaggio:
 
 Regole:
 - Includi solo le categorie che hanno almeno un prodotto
-- Assegna ogni prodotto alla categoria più appropriata
+- Assegna ogni prodotto alla categoria merceologica più appropriata
 - Se quantità non specificata scrivi q.b.
-- Se unità non specificata deducila dal contesto (Kg, Pezzi, Mazzi, Casse...)
+- Se unità non specificata deducila dal contesto (Kg, Pezzi, Mazzi, Casse, Buste, Teste, Gr...)
 - Se trovi data o giorno di consegna, estraila e mettila in Data Consegna
+- Ignora testo introduttivo come saluti o scuse
+- Correggi automaticamente i nomi dei prodotti scritti male o abbreviati (es. 'dattetino' → 'Pomodoro Datterino', 'ramato' → 'Pomodoro Ramato/Grappolo', 'cavolfiori' → 'Cavolfiore', ecc.) usando la tua conoscenza dei prodotti ortofrutticoli italiani
 - Rispondi SOLO con il testo formattato, niente altro
 
 Messaggio WhatsApp da formattare:
