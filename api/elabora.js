@@ -13,8 +13,37 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { prompt } = req.body;
+    const { prompt, inviaEmail, emailDest, emailOggetto, emailTesto } = req.body;
 
+    // Modalità invio email
+    if (inviaEmail) {
+      if (!emailDest || !emailOggetto || !emailTesto) {
+        return res.status(400).json({ error: 'Dati email mancanti' });
+      }
+
+      const resendRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
+        },
+        body: JSON.stringify({
+          from: 'Pistolesi Ortofrutta <onboarding@resend.dev>',
+          to: [emailDest],
+          subject: emailOggetto,
+          text: emailTesto
+        })
+      });
+
+      if (!resendRes.ok) {
+        const err = await resendRes.json();
+        return res.status(resendRes.status).json({ error: err.message || 'Errore invio email' });
+      }
+
+      return res.status(200).json({ success: true });
+    }
+
+    // Modalità elaborazione ordine con Claude
     if (!prompt) {
       return res.status(400).json({ error: 'Prompt mancante' });
     }
