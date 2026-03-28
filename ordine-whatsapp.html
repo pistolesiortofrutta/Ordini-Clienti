@@ -310,6 +310,422 @@
         Ordine elaborato
       </div>
       <div class="risultato-testo" id="risultatoTesto"></div>
+      <button class="btn-gmail" id="btnInvia" onclick="inviaEmail()">
+        📧 Invia Mail
+      </button>
+      <button class="btn-reset" onclick="reset()">
+        ↩ Nuovo ordine
+      </button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // Carica mail salvata
+  window.addEventListener('load', () => {
+    const savedMail = localStorage.getItem('pistolesi_mail');
+    if (savedMail) document.getElementById('mailDest').value = savedMail;
+  });
+
+  function oggi() {
+    const d = new Date();
+    return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  }
+
+  async function elaboraOrdine() {
+    const mailDest = document.getElementById('mailDest').value.trim();
+    const testo = document.getElementById('testoOrdine').value.trim();
+    const cliente = document.getElementById('nomeCliente').value.trim();
+
+    if (!mailDest) return mostraErrore('Inserisci la mail destinatario.');
+    if (!testo) return mostraErrore('Incolla il messaggio WhatsApp.');
+    if (!cliente) return mostraErrore('Inserisci il nome del cliente.');
+
+    localStorage.setItem('pistolesi_mail', mailDest);
+
+    document.getElementById('btnElabora').disabled = true;
+    document.getElementById('loading').classList.add('visible');
+    document.getElementById('errore').classList.remove('visible');
+    document.getElementById('risultato').classList.remove('visible');
+
+    const prompt = `Sei un assistente per Pistolesi Ortofrutta.
+Ricevi un messaggio WhatsApp grezzo con un ordine di frutta e verdura.
+Riformattalo con questo formato ESATTO:
+
+🍎 ORDINE PISTOLESI ORTOFRUTTA
+Cliente: ${cliente}
+Data Ordine: ${oggi()}
+[Data Consegna: ... solo se presente nel messaggio, altrimenti ometti questa riga]
+
+Poi per ogni categoria presente, usa questo formato:
+
+━━━━━━━━━━━━━━━━━━━━
+[EMOJI] [NOME CATEGORIA]
+━━━━━━━━━━━━━━━━━━━━
+• [Prodotto]               [Quantità] [Unità]
+• [Prodotto]               [Quantità] [Unità]
+
+Le categorie con le loro emoji sono:
+🍎 FRUTTA
+🥦 VERDURE
+🍅 POMODORI
+🥗 INSALATE
+🥔 PATATE E CIPOLLE
+🌿 IV GAMMA e AROMI
+📦 EXTRA
+
+Alla fine, se ci sono note nel messaggio:
+━━━━━━━━━━━━━━━━━━━━
+📝 NOTE
+━━━━━━━━━━━━━━━━━━━━
+[testo delle note]
+
+Regole:
+- Includi solo le categorie che hanno almeno un prodotto
+- Assegna ogni prodotto alla categoria più appropriata
+- Se quantità non specificata scrivi q.b.
+- Se unità non specificata deducila dal contesto (Kg, Pezzi, Mazzi, Casse...)
+- Se trovi data o giorno di consegna, estraila e mettila in Data Consegna
+- Rispondi SOLO con il testo formattato, niente altro
+
+Messaggio WhatsApp da formattare:
+${testo}`;
+
+    try {
+      const response = await fetch('/api/elabora', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || `Errore: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      document.getElementById('risultatoTesto').textContent = data.testo;
+      document.getElementById('risultato').classList.add('visible');
+      document.getElementById('risultato').scrollIntoView({ behavior: 'smooth' });
+
+      window._ordineFormattato = data.testo;
+      window._mailDest = mailDest;
+      window._cliente = cliente;
+
+    } catch (err) {
+      mostraErrore('Errore: ' + err.message);
+    } finally {
+      document.getElementById('loading').classList.remove('visible');
+      document.getElementById('btnElabora').disabled = false;
+    }
+  }
+
+  async function inviaEmail() {
+    const btn = document.getElementById('btnInvia');
+    btn.disabled = true;
+    btn.textContent = '📨 Invio in corso…';
+
+    try {
+      const response = await fetch('/api/elabora', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          inviaEmail: true,
+          emailDest: window._mailDest,
+          emailOggetto: `Ordine - ${window._cliente} - ${oggi()}`,
+          emailTesto: window._ordineFormattato
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Errore invio');
+      }
+
+      btn.textContent = '✅ Mail inviata!';
+      btn.style.background = 'var(--verde)';
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.textContent = '📧 Invia Mail';
+        btn.style.background = '';
+      }, 3000);
+
+    } catch (err) {
+      mostraErrore('Errore invio: ' + err.message);
+      btn.disabled = false;
+      btn.textContent = '📧 Invia Mail';
+    }
+  }
+
+  function mostraErrore(msg) {
+    const el = document.getElementById('errore');
+    el.textContent = msg;
+    el.classList.add('visible');
+  }
+
+  function reset() {
+    document.getElementById('testoOrdine').value = '';
+    document.getElementById('nomeCliente').value = '';
+    document.getElementById('risultato').classList.remove('visible');
+    document.getElementById('errore').classList.remove('visible');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+
+</body>
+</html>  main {
+    padding: 20px 16px 40px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .card {
+    background: var(--bianco);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: var(--ombra);
+    margin-bottom: 16px;
+    border: 1px solid var(--bordo);
+  }
+
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1rem;
+    color: var(--verde);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title .num {
+    background: var(--verde);
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+  }
+
+  label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--testo-light);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+
+  input[type="text"], textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--bordo);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    color: var(--testo);
+    background: var(--crema);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+  }
+
+  input[type="text"]:focus, textarea:focus {
+    outline: none;
+    border-color: var(--verde-chiaro);
+    box-shadow: 0 0 0 3px rgba(74,140,66,0.12);
+    background: var(--bianco);
+  }
+
+  textarea {
+    min-height: 120px;
+    resize: vertical;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--bordo);
+    margin: 14px 0;
+  }
+
+  .btn-elabora {
+    width: 100%;
+    padding: 16px;
+    background: var(--verde);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    box-shadow: var(--ombra);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-elabora:active { transform: scale(0.98); }
+  .btn-elabora:disabled { background: #aaa; cursor: not-allowed; transform: none; }
+
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 24px;
+    color: var(--verde);
+  }
+  .loading.visible { display: block; }
+
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--verde-mint);
+    border-top-color: var(--verde);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading p { font-size: 0.85rem; color: var(--testo-light); }
+
+  .risultato { display: none; }
+  .risultato.visible { display: block; }
+
+  .risultato-testo {
+    background: var(--verde-mint);
+    border: 1.5px solid var(--bordo);
+    border-radius: 10px;
+    padding: 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin-bottom: 14px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .btn-gmail {
+    width: 100%;
+    padding: 16px;
+    background: var(--arancio);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .btn-gmail:active { transform: scale(0.98); }
+
+  .btn-reset {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    color: var(--testo-light);
+    border: 1.5px solid var(--bordo);
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+
+  .errore {
+    display: none;
+    background: #fff0f0;
+    border: 1.5px solid #ffcccc;
+    border-radius: 10px;
+    padding: 14px;
+    color: #c0392b;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin-top: 12px;
+  }
+  .errore.visible { display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="emoji">🍎</div>
+  <div class="logo">
+    Pistolesi Ortofrutta
+    <span>Gestione Ordini WhatsApp</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- Configurazione mail -->
+  <div class="card">
+    <div class="card-title">
+      <div class="num">⚙</div>
+      Configurazione
+    </div>
+    <label>Mail destinatario</label>
+    <input type="text" id="mailDest" placeholder="tuamail@azienda.it">
+  </div>
+
+  <!-- Testo ordine -->
+  <div class="card">
+    <div class="card-title">
+      <div class="num">1</div>
+      Incolla il messaggio WhatsApp
+    </div>
+    <textarea id="testoOrdine" placeholder="Es: ciao! mi servono 2kg pomodori, 1 lattuga, 3 mele, consegna giovedì mattina..."></textarea>
+  </div>
+
+  <!-- Nome cliente -->
+  <div class="card">
+    <div class="card-title">
+      <div class="num">2</div>
+      Nome del cliente
+    </div>
+    <input type="text" id="nomeCliente" placeholder="Es: Ristorante Napoli">
+  </div>
+
+  <!-- Bottone -->
+  <button class="btn-elabora" onclick="elaboraOrdine()" id="btnElabora">
+    ✨ Elabora Ordine
+  </button>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p>Claude sta elaborando l'ordine…</p>
+  </div>
+
+  <!-- Errore -->
+  <div class="errore" id="errore"></div>
+
+  <!-- Risultato -->
+  <div class="risultato" id="risultato">
+    <div class="card">
+      <div class="card-title">
+        <div class="num">✓</div>
+        Ordine elaborato
+      </div>
+      <div class="risultato-testo" id="risultatoTesto"></div>
       <button class="btn-gmail" onclick="apriGmail()">
         📧 Apri in Gmail e Invia
       </button>
