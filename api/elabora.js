@@ -1,16 +1,10 @@
 export default async function handler(req, res) {
-  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
     const { prompt, inviaEmail, emailDest, emailOggetto, emailTesto } = req.body;
@@ -44,10 +38,48 @@ export default async function handler(req, res) {
     }
 
     // Modalità elaborazione ordine con Claude
-    if (!prompt) {
-      return res.status(400).json({ error: 'Prompt mancante' });
+    if (!prompt) return res.status(400).json({ error: 'Prompt mancante' });
+
+    // 1. Leggi catalogo da Supabase
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+    const [catRes, prodRes] = await Promise.all([
+      fetch(`${supabaseUrl}/rest/v1/categorie?attiva=eq.true&order=ordine.asc&select=id,nome,icona`, {
+        headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+      }),
+      fetch(`${supabaseUrl}/rest/v1/prodotti?attivo=eq.true&order=nome.asc&select=nome,categoria_id`, {
+        headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+      })
+    ]);
+
+    const categorie = await catRes.json();
+    const prodotti = await prodRes.json();
+
+    // 2. Costruisci catalogo formattato per il prompt
+    let catalogo = '';
+    for (const cat of categorie) {
+      const emoji = cat.icona || '📦';
+      const prodottiCat = prodotti
+        .filter(p => p.categoria_id === cat.id)
+        .map(p => `  - ${p.nome}`)
+        .join('\n');
+      catalogo += `${emoji} ${cat.nome.toUpperCase()}\n${prodottiCat}\n\n`;
     }
 
+    // 3. Costruisci prompt completo con catalogo reale
+    const promptCompleto = `${prompt}
+
+CATALOGO PRODOTTI PISTOLESI ORTOFRUTTA (usa questi nomi e categorie esatti):
+${catalogo}
+
+Regole aggiuntive sul catalogo:
+- Usa SEMPRE i nomi dei prodotti esatti come appaiono nel catalogo
+- Se un prodotto nel messaggio non è nel catalogo, abbinalo al prodotto più simile del catalogo
+- Se proprio non trovi un abbinamento, mettilo in EXTRA con il nome corretto
+- Usa SEMPRE le categorie esatte del catalogo, nell'ordine in cui appaiono`;
+
+    // 4. Chiama Claude
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -57,12 +89,23 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
+        max_tokens: 1500,
+        messages: [{ role: 'user', content: promptCompleto }]
       })
     });
 
     if (!response.ok) {
+      const err = await response.json();
+      return res.status(response.status).json({ error: err.error?.message || 'Errore API' });
+    }
+
+    const data = await response.json();
+    return res.status(200).json({ testo: data.content[0].text });
+
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+}    if (!response.ok) {
       const err = await response.json();
       return res.status(response.status).json({ error: err.error?.message || 'Errore API' });
     }
