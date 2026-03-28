@@ -93,7 +93,9 @@ Regole aggiuntive sul catalogo:
 - Usa SEMPRE i nomi dei prodotti esatti come appaiono nel catalogo
 - Se un prodotto nel messaggio non è nel catalogo, abbinalo al prodotto più simile del catalogo
 - Se proprio non trovi un abbinamento, mettilo in EXTRA con il nome corretto
-- Usa SEMPRE le categorie esatte del catalogo, nell'ordine in cui appaiono`;
+- Usa SEMPRE le categorie esatte del catalogo, nell'ordine in cui appaiono
+- REGOLA FONDAMENTALE: non perdere mai nessun prodotto del messaggio originale. Se un prodotto non è nel catalogo e non riesci ad abbinarlo, mettilo comunque in EXTRA con il nome esatto scritto dal cliente
+- Conta i prodotti nel messaggio originale e assicurati che nell'output ci siano tutti`;
 
     // 6. Chiama Claude
     const response = await fetch('https://api.anthropic.com/v1/messages', {
