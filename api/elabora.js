@@ -96,7 +96,8 @@ Regole aggiuntive sul catalogo:
 - Usa SEMPRE le categorie esatte del catalogo, nell'ordine in cui appaiono
 - REGOLA FONDAMENTALE: non perdere mai nessun prodotto del messaggio originale. Se un prodotto non è nel catalogo e non riesci ad abbinarlo, mettilo comunque in EXTRA con il nome esatto scritto dal cliente
 - Conta i prodotti nel messaggio originale e assicurati che nell'output ci siano tutti
-- Per la quantità e unità: se nel messaggio c'è solo un numero senza unità (es. '200'), deduci l'unità dal contesto e dal tipo di prodotto (es. per IV Gamma come rucola/misticanza/songino il numero senza unità è quasi sempre grammi → '200' = '200 gr')`;
+- Per la quantità e unità: se nel messaggio c'è solo un numero senza unità (es. '200'), deduci l'unità dal contesto e dal tipo di prodotto (es. per IV Gamma come rucola/misticanza/songino il numero senza unità è quasi sempre grammi → '200' = '200 gr')
+- Se il cliente scrive 'kiwi' senza specificare la qualità, scegli SEMPRE 'Kiwi Extra' dal catalogo, mai 'Kiwi II'`;
 
     // 6. Chiama Claude
     const response = await fetch('https://api.anthropic.com/v1/messages', {
