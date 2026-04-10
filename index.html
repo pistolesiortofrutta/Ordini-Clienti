@@ -2388,16 +2388,31 @@
                         return;
                     }
                     
-                    // Carica info prodotti per ogni dettaglio
+                    // Carica info prodotti per ogni dettaglio con categoria ATTUALE
                     for (const detail of details) {
                         if (detail.prodotto_id) {
                             const { data: prodotto } = await supabase
                                 .from('prodotti')
-                                .select('id, nome, attivo, categoria_id')
+                                .select(`
+                                    id, 
+                                    nome, 
+                                    attivo, 
+                                    categoria_id,
+                                    categorie:categoria_id (
+                                        id,
+                                        nome,
+                                        icona
+                                    )
+                                `)
                                 .eq('id', detail.prodotto_id)
                                 .single();
                             
                             detail.prodotti = prodotto;
+                            
+                            // Usa categoria ATTUALE dal DB, non quella salvata nell'ordine
+                            if (prodotto && prodotto.categorie) {
+                                detail.categoria_nome = prodotto.categorie.nome;
+                            }
                         }
                     }
                     
@@ -2518,16 +2533,31 @@
                     
                     if (error) throw error;
                     
-                    // Carica info prodotti per ogni dettaglio
+                    // Carica info prodotti per ogni dettaglio con categoria ATTUALE
                     for (const detail of details) {
                         if (detail.prodotto_id) {
                             const { data: prodotto } = await supabase
                                 .from('prodotti')
-                                .select('id, nome, attivo, categoria_id')
+                                .select(`
+                                    id, 
+                                    nome, 
+                                    attivo, 
+                                    categoria_id,
+                                    categorie:categoria_id (
+                                        id,
+                                        nome,
+                                        icona
+                                    )
+                                `)
                                 .eq('id', detail.prodotto_id)
                                 .single();
                             
                             detail.prodotti = prodotto;
+                            
+                            // Usa categoria ATTUALE dal DB, non quella salvata nel template
+                            if (prodotto && prodotto.categorie) {
+                                detail.categoria_nome = prodotto.categorie.nome;
+                            }
                         }
                     }
                     
