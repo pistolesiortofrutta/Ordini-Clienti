@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Calcolatore Prezzi</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --border: #2e2e2e;
+    --accent: #C8F135;
+    --accent-dim: rgba(200,241,53,0.10);
+    --text: #f0f0f0;
+    --text-muted: #888;
+    --text-dim: #555;
+    --red: #ff5f5f;
+    --red-dim: rgba(255,95,95,0.10);
+    --green: #4ade80;
+    --green-dim: rgba(74,222,128,0.10);
+    --yellow: #fbbf24;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 48px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .header {
+    padding: 22px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg);
+  }
+  .header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px; letter-spacing: 2px;
+    color: var(--accent); line-height: 1;
+  }
+  .header-sub { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+  .section { padding: 20px 20px 0; }
+  .section-label {
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 12px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+
+  .input-wrap {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 11px 14px;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .input-wrap:focus-within { border-color: var(--accent); background: var(--surface2); }
+  .input-wrap.accent { border-color: rgba(200,241,53,0.3); background: var(--accent-dim); }
+  .input-wrap.accent:focus-within { border-color: var(--accent); }
+
+  .input-label {
+    font-size: 9px; color: var(--text-muted); letter-spacing: 1px;
+    text-transform: uppercase; margin-bottom: 5px;
+    font-family: 'DM Mono', monospace;
+  }
+  .input-label em { color: var(--text-dim); font-style: normal; margin-left: 3px; font-size: 8px; }
+
+  .input-wrap input {
+    background: none; border: none; outline: none;
+    color: var(--text); font-family: 'DM Mono', monospace;
+    font-size: 22px; font-weight: 500; width: 100%;
+    caret-color: var(--accent);
+  }
+  .input-wrap.accent input { color: var(--accent); }
+
+  .unit {
+    position: absolute; bottom: 12px; right: 12px;
+    font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-dim);
+  }
+
+  .divider { height: 1px; background: var(--border); margin: 20px 20px 0; }
+
+  .results { padding: 20px 20px 0; }
+
+  .info-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px; margin-bottom: 10px;
+  }
+  .info-row-label { font-size: 10px; color: var(--text-dim); font-family: 'DM Mono', monospace; letter-spacing: 1px; text-transform: uppercase; }
+  .info-row-value { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 500; }
+  .info-row-value.yellow { color: var(--yellow); }
+  .info-row-value.accent { color: var(--accent); }
+
+  .listino-card {
+    border-radius: 14px; margin-bottom: 10px; overflow: hidden;
+    border: 1px solid var(--border); background: var(--surface);
+  }
+  .listino-card.win { border-color: rgba(74,222,128,0.35); background: var(--green-dim); }
+  .listino-card.lose { border-color: rgba(255,95,95,0.35); background: var(--red-dim); }
+  .listino-card.even { border-color: rgba(251,191,36,0.3); }
+
+  .card-inner { display: flex; align-items: center; padding: 14px 16px; gap: 12px; }
+
+  .card-info { flex: 1; }
+  .card-name {
+    font-size: 11px; font-family: 'DM Mono', monospace;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .card-suggested {
+    font-family: 'DM Mono', monospace; font-size: 24px; font-weight: 500; color: var(--text);
+    line-height: 1;
+  }
+  .card-suggested small { font-size: 13px; color: var(--text-dim); margin-left: 2px; }
+
+  .verdict {
+    display: inline-flex; align-items: center;
+    font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+    font-family: 'DM Mono', monospace; border-radius: 4px;
+    padding: 3px 8px; margin-top: 6px;
+  }
+  .verdict.win { background: rgba(74,222,128,0.15); color: var(--green); }
+  .verdict.lose { background: rgba(255,95,95,0.15); color: var(--red); }
+  .verdict.even { background: rgba(251,191,36,0.15); color: var(--yellow); }
+
+  .card-delta { text-align: right; min-width: 70px; }
+  .card-delta-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px; line-height: 1;
+  }
+  .card-delta-value.pos { color: var(--green); }
+  .card-delta-value.neg { color: var(--red); }
+  .card-delta-value.zero { color: var(--yellow); }
+  .card-delta-label {
+    font-size: 9px; font-family: 'DM Mono', monospace; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 1px; margin-top: 1px;
+  }
+
+  /* Settings collassati */
+  .settings-toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; cursor: pointer; user-select: none;
+    border-top: 1px solid var(--border); margin-top: 20px;
+  }
+  .settings-toggle span { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); font-family: 'DM Mono', monospace; }
+  .arrow { color: var(--text-dim); font-size: 13px; transition: transform 0.2s; display: inline-block; }
+  .settings-toggle.open .arrow { transform: rotate(180deg); }
+  .settings-body { display: none; padding: 0 20px 20px; }
+  .settings-body.open { display: block; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .listino-card { animation: slideIn 0.2s ease both; }
+  .listino-card:nth-child(1) { animation-delay: 0.03s; }
+  .listino-card:nth-child(2) { animation-delay: 0.07s; }
+  .listino-card:nth-child(3) { animation-delay: 0.11s; }
+  .listino-card:nth-child(4) { animation-delay: 0.15s; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Calcolatore Prezzi</h1>
+  <div class="header-sub">Pistolesi Ortofrutta</div>
+</div>
+
+<div class="section">
+  <div class="section-label">Input</div>
+  <div class="input-row">
+    <div class="input-wrap accent">
+      <div class="input-label">Costo Acquisto <em>A3</em></div>
+      <input type="number" id="costoAcquisto" value="1.20" step="0.01" inputmode="decimal">
+      <span class="unit">€</span>
+    </div>
+    <div class="input-wrap accent">
+      <div class="input-label">Mio Prezzo <em>D3</em></div>
+      <input type="number" id="listino" value="1.00" step="0.01" inputmode="decimal">
+      <span class="unit">€</span>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="results">
+  <div id="results"></div>
+</div>
+
+<div class="settings-toggle" id="settingsToggle">
+  <span>⚙ Parametri fissi (A1 / A2)</span>
+  <span class="arrow">▾</span>
+</div>
+<div class="settings-body" id="settingsBody">
+  <div class="input-row">
+    <div class="input-wrap">
+      <div class="input-label">Costi Gestione <em>A1</em></div>
+      <input type="number" id="costiGestione" value="0.33" step="0.01" inputmode="decimal">
+    </div>
+    <div class="input-wrap">
+      <div class="input-label">Utile Netto <em>A2</em></div>
+      <input type="number" id="utileNetto" value="0.15" step="0.01" inputmode="decimal">
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('settingsToggle').addEventListener('click', function() {
+    this.classList.toggle('open');
+    document.getElementById('settingsBody').classList.toggle('open');
+  });
+
+  ['costoAcquisto','listino','costiGestione','utileNetto'].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', calc);
+    el.addEventListener('focus', function() { this.select(); });
+  });
+
+  function fmt(n) { return n.toFixed(2).replace('.',','); }
+  function fmtDelta(n) { return (n >= 0 ? '+' : '') + n.toFixed(2).replace('.',','); }
+
+  function calc() {
+    const A  = parseFloat(document.getElementById('costoAcquisto').value) || 0;
+    const D3 = parseFloat(document.getElementById('listino').value) || 0;
+    const A1 = parseFloat(document.getElementById('costiGestione').value) || 0;
+    const A2 = parseFloat(document.getElementById('utileNetto').value) || 0;
+
+    const B = A + A1 + A2; // Base netta
+
+    const listini = [
+      { name: 'Listino 8%', tag: 'MARR',        sconto: 0.92 },
+      { name: 'Listino 6%', tag: 'Riva',              sconto: 0.94 },
+      { name: 'Listino 5%', tag: 'Elba / Golfo del Sole', sconto: 0.95 },
+      { name: 'Listino 3%', tag: 'ICON',               sconto: 0.97 },
+    ];
+
+    // Info rows
+    let html = `
+      <div class="info-row">
+        <span class="info-row-label">Base netta</span>
+        <span class="info-row-value yellow">${fmt(B)} €</span>
+      </div>
+      <div class="info-row">
+        <span class="info-row-label">Il mio prezzo di vendita</span>
+        <span class="info-row-value accent">${fmt(D3)} €</span>
+      </div>
+    `;
+
+    // Cards
+    listini.forEach(l => {
+      const prezzoSuggerito = B / l.sconto;
+      // Delta = quanto guadagno/perdo rispetto alla soglia minima se vendo a D3
+      // Formula Excel: (D3 * sconto) - A - A1
+      const delta = (D3 * l.sconto) - A - A1;
+
+      const cls = delta > 0.005 ? 'win' : delta < -0.005 ? 'lose' : 'even';
+      const verdictLabel = delta > 0.005 ? '▲ Guadagno' : delta < -0.005 ? '▼ Perdita' : '= Pari';
+      const deltaClass = delta > 0.005 ? 'pos' : delta < -0.005 ? 'neg' : 'zero';
+
+      html += `
+        <div class="listino-card ${cls}">
+          <div class="card-inner">
+            <div class="card-info">
+              <div class="card-name">${l.name} · ${l.tag}</div>
+              <div class="card-suggested">${fmt(prezzoSuggerito)}<small>€</small></div>
+              <div class="verdict ${cls}">${verdictLabel} vendendo a ${fmt(D3)} €</div>
+            </div>
+            <div class="card-delta">
+              <div class="card-delta-value ${deltaClass}">${fmtDelta(delta)}</div>
+              <div class="card-delta-label">€ / kg</div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    document.getElementById('results').innerHTML = html;
+  }
+
+  calc();
+</script>
+</body>
+</html>
