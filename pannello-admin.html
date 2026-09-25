@@ -378,6 +378,7 @@
             </select>
             
             <button class="btn btn-warning" onclick="resetFiltri()">🔄 Reset</button>
+            <button class="btn btn-warning" id="btnStorico" onclick="caricaStoricoCompleto()">📚 Carica storico completo</button>
         </div>
 
         <div class="loading" id="loading">Caricamento ordini...</div>
@@ -766,17 +767,33 @@
             let filteredOrders = [];
             let lastOrderCount = 0;
 
+            // Riduzione egress: di default si caricano solo gli ultimi N giorni
+            // (più gli ordini ancora "nuovo", anche se più vecchi).
+            const GIORNI_STORICO = 30;
+            let storicoCompleto = false;
+            let ultimoCheck = null;
+
             async function loadOrdini() {
                 try {
-                    const { data, error } = await supabase
+                    let query = supabase
                         .from('ordini')
                         .select('*, ordini_dettagli(*)')
                         .order('created_at', { ascending: false });
+
+                    if (!storicoCompleto) {
+                        const da = new Date(Date.now() - GIORNI_STORICO * 864e5).toISOString();
+                        query = query.or(`created_at.gte.${da},stato.eq.nuovo`);
+                    }
+
+                    const { data, error } = await query;
 
                     if (error) throw error;
 
                     ordersData = data;
                     filteredOrders = data;
+                    ultimoCheck = data.length
+                        ? data.reduce((max, o) => o.created_at > max ? o.created_at : max, data[0].created_at)
+                        : new Date().toISOString();
                     
                     checkNewOrders();
                     applicaFiltri();
@@ -3030,13 +3047,40 @@
             }
 
             // ============================================
-            // Auto-refresh ogni 30 secondi
+            // Controllo nuovi ordini (leggero)
             // ============================================
-            // ============================================
-            setInterval(() => {
-                console.log('🔄 Refresh automatico...');
+            // Controllo leggero ogni 60s: chiede solo il NUMERO di ordini nuovi
+            // (nessun dato scaricato). Ricarica la lista solo se ce ne sono.
+            // In pausa quando la scheda non è visibile.
+            async function controllaNuovi() {
+                if (document.hidden || !ultimoCheck) return;
+                try {
+                    const { count, error } = await supabase
+                        .from('ordini')
+                        .select('id', { count: 'exact', head: true })
+                        .gt('created_at', ultimoCheck);
+                    if (error) throw error;
+                    if (count > 0) {
+                        console.log(`🔔 ${count} ordini nuovi, ricarico...`);
+                        loadOrdini();
+                    }
+                } catch (e) {
+                    console.error('Controllo nuovi ordini:', e);
+                }
+            }
+
+            setInterval(controllaNuovi, 60000);
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) controllaNuovi();
+            });
+
+            window.caricaStoricoCompleto = function() {
+                storicoCompleto = !storicoCompleto;
+                document.getElementById('btnStorico').textContent = storicoCompleto
+                    ? '📅 Solo ultimi ' + GIORNI_STORICO + ' giorni'
+                    : '📚 Carica storico completo';
                 loadOrdini();
-            }, 30000);
+            };
 
             // Avvio
             window.addEventListener('DOMContentLoaded', loadOrdini);
